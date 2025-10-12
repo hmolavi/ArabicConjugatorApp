@@ -102,13 +102,11 @@ class ArabicConjugatorApp:
         self.example_verb_combo.set("Examples")
         self.example_verb_combo.bind("<<ComboboxSelected>>", self.on_example_verb_select)
 
-        ttk.Label(main_frame, text="2. Select Tense:", font=("Arial", 12,)).grid(row=1, column=0, sticky=tk.W, pady=5)
-        ttk.Radiobutton(main_frame, text="Past (الماضي)", variable=self.tense_var, value="Past", command=self.update_present_options).grid(
-            row=1, column=1, sticky=tk.W
-        )
-        ttk.Radiobutton(main_frame, text="Present (المضارع)", variable=self.tense_var, value="Present", command=self.update_present_options).grid(
-            row=1, column=2, sticky=tk.W
-        )
+        tense_frame = ttk.Frame(main_frame)
+        tense_frame.grid(row=1, column=0, columnspan=4, sticky=tk.W, pady=5)
+        ttk.Label(tense_frame, text="2. Select Tense:", font=("Arial", 12,)).pack(side=tk.LEFT)
+        ttk.Radiobutton(tense_frame, text="Past (الماضي)", variable=self.tense_var, value="Past", command=self.update_present_options).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(tense_frame, text="Present (المضارع)", variable=self.tense_var, value="Present", command=self.update_present_options).pack(side=tk.LEFT, padx=5)
 
         self.present_frame = ttk.Frame(main_frame)
 
@@ -132,7 +130,7 @@ class ArabicConjugatorApp:
         self.update_present_options()
 
         self.conjugate_button = ttk.Button(main_frame, text="Conjugate Verb", command=self.calculate_conjugation, style="TButton")
-        self.conjugate_button.grid(row=3, column=0, columnspan=3, pady=10)
+        self.conjugate_button.grid(row=3, column=0, columnspan=4, pady=10)
 
         self.font_size_var = tk.StringVar(value="18")
         self.double_spacing_var = tk.BooleanVar(value=False)
@@ -140,7 +138,7 @@ class ArabicConjugatorApp:
         self.last_title = ""
 
         controls_frame = ttk.Frame(main_frame)
-        controls_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
+        controls_frame.grid(row=4, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
 
         ttk.Label(controls_frame, text="Conjugation Output:", font=("Arial", 12,)).pack(side=tk.LEFT)
 
@@ -188,7 +186,7 @@ class ArabicConjugatorApp:
     def update_present_options(self):
         """Shows or hides the Bab/Mood selectors based on the selected tense."""
         if self.tense_var.get() == "Present":
-            self.present_frame.grid(row=2, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
+            self.present_frame.grid(row=2, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
         else:
             self.present_frame.grid_forget()
 
