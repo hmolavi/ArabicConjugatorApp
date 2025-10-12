@@ -109,12 +109,18 @@ class ArabicConjugatorApp:
         self.conjugate_button.grid(row=3, column=0, columnspan=3, pady=10)
 
         self.font_size_var = tk.StringVar(value="18")
-        font_size_frame = ttk.Frame(main_frame)
-        font_size_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
-        ttk.Label(font_size_frame, text="Conjugation Output:", font=("Arial", 12, "bold")).pack(side=tk.LEFT)
-        ttk.Label(font_size_frame, text="Font Size:").pack(side=tk.LEFT, padx=(10, 2))
+        self.double_spacing_var = tk.BooleanVar(value=False)
+        self.last_results = None
+        self.last_title = ""
+
+        controls_frame = ttk.Frame(main_frame)
+        controls_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
+
+        ttk.Label(controls_frame, text="Conjugation Output:", font=("Arial", 12, "bold")).pack(side=tk.LEFT)
+
+        ttk.Label(controls_frame, text="Font Size:").pack(side=tk.LEFT, padx=(10, 2))
         self.font_size_combo = ttk.Combobox(
-            font_size_frame,
+            controls_frame,
             textvariable=self.font_size_var,
             values=[12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 48],
             width=4,
@@ -122,6 +128,14 @@ class ArabicConjugatorApp:
         )
         self.font_size_combo.pack(side=tk.LEFT)
         self.font_size_combo.bind("<<ComboboxSelected>>", self.update_font_size)
+
+        self.spacing_check = ttk.Checkbutton(
+            controls_frame,
+            text="Double Spacing",
+            variable=self.double_spacing_var,
+            command=self.redisplay_results
+        )
+        self.spacing_check.pack(side=tk.LEFT, padx=10)
 
         self.output_text = scrolledtext.ScrolledText(
             main_frame, wrap=tk.WORD, width=60, height=20, font=("Arial", 18), **{"bd": 1, "relief": tk.SOLID}
@@ -148,6 +162,12 @@ class ArabicConjugatorApp:
         font_size = int(self.font_size_var.get())
         self.output_text.configure(font=("Arial", font_size))
         self.output_text.tag_configure("header", font=("Arial", font_size, "bold"), justify="center")
+        self.redisplay_results()
+
+    def redisplay_results(self):
+        """Redisplays the last conjugation results, applying current display options."""
+        if self.last_results:
+            self._display_results(self.last_title, self.last_results)
 
     def parse_root(self):
         """
@@ -193,6 +213,7 @@ class ArabicConjugatorApp:
         """Displays an error message in the output area."""
         self.output_text.delete(1.0, tk.END)
         self.output_text.insert(tk.END, message, "header")
+        self.last_results = None # Clear cache on error
 
     def calculate_conjugation(self):
         """Main calculation and display function."""
@@ -220,6 +241,8 @@ class ArabicConjugatorApp:
             results = self._conjugate_present(F, A, L, present_ayn_haraka, mood)
             title = f"المضارع - {mood} ({selected_bab_key})"
 
+        self.last_title = title
+        self.last_results = results
         self._display_results(title, results)
 
     def _conjugate_past(self, F, A, L, hF, hA):
@@ -331,11 +354,11 @@ class ArabicConjugatorApp:
 
         display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
 
-        PAD = 26
+        row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
         table_content = ""
-        separator = "—" * 29 + "\n"
+        separator = "—" * 24 + "\n"
 
-        header = f"| Plural\t| Dual\t| Singular\t|\n"
+        header = f"| Plural\t| Dual\t| Singular\t|\t\t|\n"
 
         table_content += separator
         table_content += header
@@ -347,20 +370,19 @@ class ArabicConjugatorApp:
             dual_form = row_data.get("Dual", "---")
             singular_form = row_data.get("Singular", "---")
 
-            table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\t\tl\n"
+            table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
 
         row_data_1st = grouped_results.get("1st person", {})
         plural_form = row_data_1st.get("Plural", "---")
         singular_form = row_data_1st.get("Singular", "---")
 
-        table_content += f"l\t {singular_form}\tl {plural_form}\tl 1st person\t\t\tl\n"
+        table_content += f"l\t {singular_form}\tl {plural_form}\tl 1st person\t\tl{row_ending}"
         
         table_content += separator
 
         # Apply reshaping and bidi algorithm to the entire table string at once for correct rendering.
         print(table_content)
-        final_output = table_content
-        self.output_text.insert(tk.END, final_output)
+        self.output_text.insert(tk.END, table_content)
 
 
 if __name__ == "__main__":
