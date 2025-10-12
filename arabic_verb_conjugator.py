@@ -332,9 +332,10 @@ class ArabicConjugatorApp:
         # This string is built in LTR logical order, and bidi.algorithm will reverse it for display.
         PAD = 25
         table_content = ""
-        separator = "—" * 36 + "\n"
+        separator = "—" * 25 + "\n"
 
-        header = f"| {'Singular':<{PAD}}| {'Dual':<{PAD}}| {'Plural':<{PAD}}|\n"
+        # header = f"| {'Singular':<{PAD}}| {'Dual':<{PAD}}| {'Plural':<{PAD}}|\n"
+        header = f"| {'Plural':<{PAD}}| {'Dual':<{PAD}}| {'Singular':<{PAD}}|\n"
 
         table_content += separator
         table_content += header
@@ -346,17 +347,12 @@ class ArabicConjugatorApp:
             dual_form = row_data.get("Dual", "---")
             singular_form = row_data.get("Singular", "---")
 
-            # table_content += f"| {pg:<{PAD}}| {singular_form:<{PAD}}| {dual_form:<{PAD}}| {plural_form:<{PAD}}|\n"
             table_content += f"| {singular_form:<{PAD}}| {dual_form:<{PAD}}| {plural_form:<{PAD}}|\n"
-
-        table_content += separator
 
         row_data_1st = grouped_results.get("1st person", {})
         plural_form = row_data_1st.get("Plural", "---")
         singular_form = row_data_1st.get("Singular", "---")
 
-        # Add two spaces for dual column to keep alignment
-        # table_content += f"| {'1st person':<{PAD}}| {singular_form:<{PAD}}| {' ':<{PAD}}| {plural_form:<{PAD}}|\n"
         table_content += f"| {singular_form:<{PAD}}| {' ':<{PAD}}| {plural_form:<{PAD}}|\n"
         
         table_content += separator
