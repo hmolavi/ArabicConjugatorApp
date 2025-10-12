@@ -64,6 +64,15 @@ class ArabicConjugatorApp:
         {"verb": "دَخَلَ", "bab": "Fatha/Damma (نَصَرَ / يَنْصُرُ)"},
     ]
 
+    # Present-mood options (expandable)
+    MOODS = [
+        ("Indicative (مرفوع)", "Indicative (مرفوع)"),
+        ("Subjunctive (منصوب)", "Subjunctive (منصوب)"),
+        
+        # ================= Under development =================
+        #("Jussive (مجزوم)", "Jussive (مجزوم)"), 
+    ]
+
     def __init__(self, master):
         self.master = master
         master.title("Arabic Verb Conjugator")
@@ -145,15 +154,9 @@ class ArabicConjugatorApp:
                 12,
             ),
         ).grid(row=1, column=0, sticky=tk.W, pady=2, padx=5)
-        ttk.Radiobutton(self.present_frame, text="Indicative (مرفوع)", variable=self.mood_var, value="Indicative (مرفوع)").grid(
-            row=1, column=1, sticky=tk.W
-        )
-        ttk.Radiobutton(self.present_frame, text="Subjunctive (منصوب)", variable=self.mood_var, value="Subjunctive (منصوب)").grid(
-            row=2, column=1, sticky=tk.W
-        )
-        ttk.Radiobutton(self.present_frame, text="Jussive (مجزوم)", variable=self.mood_var, value="Jussive (مجزوم)").grid(
-            row=3, column=1, sticky=tk.W
-        )
+        # Create radio buttons from the MOODS list so it's easy to add more options later
+        for idx, (label, value) in enumerate(self.MOODS, start=1):
+            ttk.Radiobutton(self.present_frame, text=label, variable=self.mood_var, value=value).grid(row=idx, column=1, sticky=tk.W)
 
         self.update_present_options()
 
