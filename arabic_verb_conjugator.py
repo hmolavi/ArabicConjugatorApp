@@ -262,20 +262,20 @@ class ArabicConjugatorApp:
 
     def _conjugate_present(self, F, A, L, hA, mood):
         prefixes = [
-            f"{self.YAA}",
-            f"{self.YAA}",
-            f"{self.YAA}",
-            f"{self.TAA}",
-            f"{self.TAA}",
-            f"{self.YAA}",
-            f"{self.TAA}",
-            f"{self.TAA}",
-            f"{self.TAA}",
-            f"{self.TAA}",
-            f"{self.TAA}",
-            f"{self.TAA}",
-            f"{self.ALEF}{self.FATHA}", # uhh why is fatha not adding ???
-            f"{self.NOON}",
+            self.YAA,
+            self.YAA,
+            self.YAA,
+            self.TAA,
+            self.TAA,
+            self.YAA,
+            self.TAA,
+            self.TAA,
+            self.TAA,
+            self.TAA,
+            self.TAA,
+            self.TAA,
+            self.ALEF,
+            self.NOON,
         ]
         stem = f"{F}{self.SUKUN}{A}{hA}{L}"
 
