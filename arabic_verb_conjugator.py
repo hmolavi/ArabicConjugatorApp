@@ -333,7 +333,7 @@ class ArabicConjugatorApp:
 
         PAD = 26
         table_content = ""
-        separator = "—" * 26 + "\n"
+        separator = "—" * 29 + "\n"
 
         header = f"| Plural\t| Dual\t| Singular\t|\n"
 
@@ -346,11 +346,6 @@ class ArabicConjugatorApp:
             plural_form = row_data.get("Plural", "---")
             dual_form = row_data.get("Dual", "---")
             singular_form = row_data.get("Singular", "---")
-
-            # Again with the silly switchero because of GUI
-            p_pad = PAD - len(singular_form)
-            d_pad = PAD - len(dual_form)
-            s_pad = PAD - len(plural_form)
 
             table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\t\tl\n"
 
