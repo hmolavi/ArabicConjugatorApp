@@ -4,6 +4,7 @@ from tkinter import ttk, scrolledtext
 actual_table = False
 DEBUGGIN = True
 
+
 class ArabicConjugatorApp:
     # --- Unicode Constants for Arabic Diacritics (Harakat) ---
     FATHA = "\u064e"  # یَ
@@ -196,7 +197,7 @@ class ArabicConjugatorApp:
 
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(5, weight=1)
-        
+
         if DEBUGGIN:
             self.calculate_conjugation()
 
@@ -283,7 +284,7 @@ class ArabicConjugatorApp:
         if DEBUGGIN:
             self.root_entry.delete(0, tk.END)
             self.root_entry.insert(0, "فَعَلَ")
-        
+
         parsed_values = self.parse_root()
         if not parsed_values or not parsed_values[0]:
             return
@@ -477,7 +478,13 @@ class ArabicConjugatorApp:
                         term_grouped_results[person_gender][num] = verb
 
                 term_table_content = ""
-                term_table_content += f"{title}\n"
+                # Visualize title as well so harakat and RTL ordering show correctly in terminal
+                try:
+                    title_vis = get_display(reshaper.reshape(title))
+                except Exception:
+                    title_vis = title
+
+                term_table_content += f"{title_vis}\n"
                 term_table_content += "=" * 77 + "\n"
 
                 display_order_term = ["3rd person male", "3rd person female", "2nd person male", "2nd person female", "1st person"]
