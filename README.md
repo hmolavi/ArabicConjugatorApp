@@ -1,6 +1,6 @@
 # Arabic Verb Conjugator
 
->Also available on [replit.com/@hmolavi/Arabic-Verb-Conjugator](https://replit.com/@hmolavi/Arabic-Verb-Conjugator).
+>Also available on [replit.com/@hmolavi/ArabicConjugator](https://replit.com/@hmolavi/ArabicConjugator).
 
 A simple yet powerful desktop application for conjugating Arabic verbs. This tool is designed for learners and enthusiasts of the Arabic language to help them understand and practice verb conjugation. The application features a graphical user interface (GUI) built with Python's `tkinter` library.
 
