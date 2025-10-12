@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext
 
 actual_table = False
+DEBUGGIN = True
 
 class ArabicConjugatorApp:
     # --- Unicode Constants for Arabic Diacritics (Harakat) ---
@@ -172,6 +173,9 @@ class ArabicConjugatorApp:
 
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(5, weight=1)
+        
+        if DEBUGGIN:
+            self.calculate_conjugation()
 
     def on_example_verb_select(self, event=None):
         selected_verb_str = self.example_verb_var.get()
@@ -252,6 +256,11 @@ class ArabicConjugatorApp:
 
     def calculate_conjugation(self):
         """Main calculation and display function."""
+
+        if DEBUGGIN:
+            self.root_entry.delete(0, tk.END)
+            self.root_entry.insert(0, "فَعَلَ")
+        
         parsed_values = self.parse_root()
         if not parsed_values or not parsed_values[0]:
             return
