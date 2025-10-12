@@ -1,25 +1,20 @@
 import tkinter as tk
-from tkinter import ttk, scrolledtext, font
-import re
-
-def reshape(text):
-    return text
-
-def get_display(text):
-    return text
+from tkinter import ttk, scrolledtext
 
 
 class ArabicConjugatorApp:
     # --- Unicode Constants for Arabic Diacritics (Harakat) ---
-    FATHA = "\u064e"  # َ
-    DAMMA = "\u064f"  # ُ
-    KASRA = "\u0650"  # ِ
-    SUKUN = "\u0652"  # ْ
-    ALEF = "\u0627"  # ا
-    WAW = "\u0648"  # و
-    YAA = "\u064a"  # ي
-    NOON = "\u0646"  # ن
-    TAA = "\u062a"  # ت
+    FATHA = "\u064e"  # یَ
+    DAMMA = "\u064f"  # یُ
+    KASRA = "\u0650"  # یِ
+    SUKUN = "\u0652"  # یْ
+    SHADDA = "\u0651" # یّ
+    ALEF = "\u0627"   # ا
+    WAW = "\u0648"    # و
+    YAA = "\u064a"    # ي
+    NOON = "\u0646"   # ن
+    TAA = "\u062a"    # ت
+    MEEM = "\u0645"   # م
     ALEF_MAKSURA = "\u0649"  # ى
 
     # List of valid harakat used in parsing
@@ -76,7 +71,10 @@ class ArabicConjugatorApp:
             row=0, column=0, sticky=tk.W, pady=5
         )
         self.root_entry = ttk.Entry(main_frame, font=("Arial", 16), justify="right")
-        self.root_entry.grid(row=0, column=1, columnspan=2, sticky=(tk.W, tk.E), padx=5)
+        self.root_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
+
+        self.clear_button = ttk.Button(main_frame, text="Clear", command=lambda: self.root_entry.delete(0, tk.END))
+        self.clear_button.grid(row=0, column=2, padx=5)
 
         ttk.Label(main_frame, text="2. Select Tense:", font=("Arial", 12, "bold")).grid(row=1, column=0, sticky=tk.W, pady=5)
         ttk.Radiobutton(main_frame, text="Past (الماضي)", variable=self.tense_var, value="Past", command=self.update_present_options).grid(
@@ -110,7 +108,21 @@ class ArabicConjugatorApp:
         self.conjugate_button = ttk.Button(main_frame, text="Conjugate Verb", command=self.calculate_conjugation, style="TButton")
         self.conjugate_button.grid(row=3, column=0, columnspan=3, pady=10)
 
-        ttk.Label(main_frame, text="Conjugation Output:", font=("Arial", 12, "bold")).grid(row=4, column=0, sticky=tk.W, pady=5)
+        self.font_size_var = tk.StringVar(value="18")
+        font_size_frame = ttk.Frame(main_frame)
+        font_size_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
+        ttk.Label(font_size_frame, text="Conjugation Output:", font=("Arial", 12, "bold")).pack(side=tk.LEFT)
+        ttk.Label(font_size_frame, text="Font Size:").pack(side=tk.LEFT, padx=(10, 2))
+        self.font_size_combo = ttk.Combobox(
+            font_size_frame,
+            textvariable=self.font_size_var,
+            values=[12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+            width=4,
+            state="readonly"
+        )
+        self.font_size_combo.pack(side=tk.LEFT)
+        self.font_size_combo.bind("<<ComboboxSelected>>", self.update_font_size)
+
         self.output_text = scrolledtext.ScrolledText(
             main_frame, wrap=tk.WORD, width=60, height=20, font=("Arial", 18), **{"bd": 1, "relief": tk.SOLID}
         )
@@ -128,6 +140,12 @@ class ArabicConjugatorApp:
         else:
             self.present_frame.grid_forget()
 
+    def update_font_size(self, event=None):
+        """Updates the font size of the output text area."""
+        font_size = int(self.font_size_var.get())
+        self.output_text.configure(font=("Arial", font_size))
+        self.output_text.tag_configure("header", font=("Arial", font_size, "bold"), justify="center")
+
     def parse_root(self):
         """
         Parses the full Past Tense verb input (e.g., 'ذَهَبَ') to extract
@@ -135,7 +153,7 @@ class ArabicConjugatorApp:
         """
         raw_input = self.root_entry.get().strip()[::-1]
 
-        clean_input = "".join(c for c in raw_input if "\u0621" <= c <= "\u0652" or c in self.HARAKAT)
+        clean_input = "".join(c for c in raw_input if "\u0600" <= c <= "\u06FF" or c in self.HARAKAT)
         letters_only = "".join(c for c in clean_input if c not in self.HARAKAT)
 
         if len(letters_only) < 3:
@@ -171,15 +189,15 @@ class ArabicConjugatorApp:
     def display_error(self, message):
         """Displays an error message in the output area."""
         self.output_text.delete(1.0, tk.END)
-        self.output_text.insert(tk.END, get_display(reshape(message)), "header")
+        self.output_text.insert(tk.END, message, "header")
 
     def calculate_conjugation(self):
         """Main calculation and display function."""
         
         self.root_entry.delete(0, tk.END)
-        self.root_entry.insert(0, "ذَهَبَ")
+        self.root_entry.insert(0, "کَتَبَ")
 
-        # Tkinter is weird, had to hack it like this to get it to output properly
+        # Tkinter is weird, had to hack it to get input in reverse to get GUI to output properly
         # F, A, L, past_fa_haraka, past_ayn_haraka = self.parse_root() # Original - correct order
         L, A, F, past_ayn_haraka, past_fa_haraka = self.parse_root()
         
@@ -205,20 +223,20 @@ class ArabicConjugatorApp:
         base_h = f"{F}{hF}{A}{hA}{L}"
         sukun_h = f"{F}{hF}{A}{self.SUKUN}{L}"
         forms = [
-            f"{base_h}{self.FATHA}",
-            f"{base_h}{self.FATHA}{self.ALEF}",
-            f"{base_h}{self.DAMMA}{self.WAW}{self.ALEF}",
-            f"{base_h}{self.SUKUN}{self.TAA}{self.SUKUN}",
-            f"{base_h}{self.SUKUN}{self.TAA}{self.FATHA}{self.ALEF}",
-            f"{sukun_h}{self.NOON}{self.FATHA}",
-            f"{sukun_h}{self.TAA}{self.FATHA}",
-            f"{sukun_h}{self.TAA}{self.DAMMA}{self.ALEF}",
-            f"{sukun_h}{self.TAA}{self.DAMMA}",
-            f"{sukun_h}{self.TAA}{self.KASRA}",
-            f"{sukun_h}{self.TAA}{self.DAMMA}{self.ALEF}",
-            f"{sukun_h}{self.TAA}{self.SUKUN}{self.NOON}{self.DAMMA}",
-            f"{sukun_h}{self.TAA}{self.DAMMA}",
-            f"{sukun_h}{self.NOON}{self.ALEF}",
+            f"{base_h}{self.FATHA}",                                    # 1
+            f"{base_h}{self.FATHA}{self.ALEF}",                         # 2
+            f"{base_h}{self.DAMMA}{self.WAW}{self.ALEF}",               # 3
+            f"{base_h}{self.FATHA}{self.TAA}{self.SUKUN}",              # 4
+            f"{base_h}{self.FATHA}{self.TAA}{self.FATHA}{self.ALEF}",   # 5
+            f"{sukun_h}{self.SUKUN}{self.NOON}{self.FATHA}",            # 6
+            f"{sukun_h}{self.SUKUN}{self.TAA}{self.FATHA}",
+            f"{sukun_h}{self.SUKUN}{self.TAA}{self.DAMMA}{self.MEEM}{self.ALEF}",
+            f"{sukun_h}{self.SUKUN}{self.TAA}{self.DAMMA}{self.MEEM}",
+            f"{sukun_h}{self.SUKUN}{self.TAA}{self.KASRA}",
+            f"{sukun_h}{self.SUKUN}{self.TAA}{self.DAMMA}{self.MEEM}{self.ALEF}",
+            f"{sukun_h}{self.SUKUN}{self.TAA}{self.DAMMA}{self.NOON}{self.SHADDA}{self.KASRA}",
+            f"{sukun_h}{self.SUKUN}{self.TAA}{self.DAMMA}",
+            f"{sukun_h}{self.SUKUN}{self.NOON}{self.ALEF}",
         ]
         return dict(zip([p[0] for p in self.PRONOUNS], forms))
 
@@ -300,7 +318,7 @@ class ArabicConjugatorApp:
     def _display_results(self, title, results):
         """Formats and displays the 14 conjugations in the required table format."""
         self.output_text.delete(1.0, tk.END)
-        self.output_text.insert(tk.END, get_display(reshape(f"\n{title}\n\n")), "header")
+        self.output_text.insert(tk.END, f"\n{title}\n\n", "header")
 
         grouped_results = {}
         for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, results.values()):
@@ -316,7 +334,7 @@ class ArabicConjugatorApp:
         table_content = ""
         separator = "—" * 36 + "\n"
 
-        header = f"| {'Plural':<{PAD}}| {'Dual':<{PAD}}| {'Singular':<{PAD}}| {'Person/Gender':<{PAD}}\n"
+        header = f"| {'Singular':<{PAD}}| {'Dual':<{PAD}}| {'Plural':<{PAD}}|\n"
 
         table_content += separator
         table_content += header
@@ -328,8 +346,8 @@ class ArabicConjugatorApp:
             dual_form = row_data.get("Dual", "---")
             singular_form = row_data.get("Singular", "---")
 
-            # table_content += f"| {pg:<{PAD}}| {singular_form:<{PAD}}| {dual_form:<{PAD}}| {plural_form:<{PAD}}\n" # flipped
-            table_content += f"| {plural_form:<{PAD}}| {dual_form:<{PAD}}| {singular_form:<{PAD}}| {pg:<{PAD}} |\n" # Correct 
+            # table_content += f"| {pg:<{PAD}}| {singular_form:<{PAD}}| {dual_form:<{PAD}}| {plural_form:<{PAD}}|\n"
+            table_content += f"| {singular_form:<{PAD}}| {dual_form:<{PAD}}| {plural_form:<{PAD}}|\n"
 
         table_content += separator
 
@@ -338,13 +356,14 @@ class ArabicConjugatorApp:
         singular_form = row_data_1st.get("Singular", "---")
 
         # Add two spaces for dual column to keep alignment
-        # table_content += f"| {'1st person':<{PAD}}| {singular_form:<{PAD}}| {' ':<{PAD}}| {plural_form:<{PAD}}\n"
-        table_content += f"| {plural_form:<{PAD}}| {' ':<{PAD}}| {singular_form:<{PAD}}| {'1st person':<{PAD}} |\n"
+        # table_content += f"| {'1st person':<{PAD}}| {singular_form:<{PAD}}| {' ':<{PAD}}| {plural_form:<{PAD}}|\n"
+        table_content += f"| {singular_form:<{PAD}}| {' ':<{PAD}}| {plural_form:<{PAD}}|\n"
+        
         table_content += separator
 
         # Apply reshaping and bidi algorithm to the entire table string at once for correct rendering.
         print(table_content)
-        final_output = get_display(reshape(table_content))
+        final_output = table_content
         self.output_text.insert(tk.END, final_output)
 
 
