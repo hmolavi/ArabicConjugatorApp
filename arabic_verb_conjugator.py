@@ -245,16 +245,16 @@ class ArabicConjugatorApp:
         forms = [
             f"{base_a}{self.FATHA}",                                               # 1
             f"{base_a}{self.FATHA}{self.ALEF}",                                    # 2
-            f"{base_a}{self.DAMMA}{self.WAW}{self.ALEF}",                          # 3
+            f"{base_a}{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",              # 3
             f"{base_a}{self.FATHA}{self.TAA}{self.SUKUN}",                         # 4
-            f"{base_a}{self.FATHA}{self.TAA}{self.FATHA}{self.ALEF}",              # 5
+            f"{base_a}{self.FATHA}{self.TAA}{self.ALEF}{self.FATHA}",              # 5
             f"{base_b}{self.NOON}{self.FATHA}",                                    # 6
             f"{base_b}{self.TAA}{self.FATHA}",                                     # 7
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.ALEF}",               # 8
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}",                          # 9
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",   # 8
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.SUKUN}",              # 9
             f"{base_b}{self.TAA}{self.KASRA}",                                     # 10
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.ALEF}",               # 11
-            f"{base_b}{self.TAA}{self.DAMMA}{self.NOON}{self.SHADDA}{self.KASRA}", # 12
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",   # 11
+            f"{base_b}{self.TAA}{self.DAMMA}{self.NOON}{self.SHADDA}{self.FATHA}", # 12
             f"{base_b}{self.TAA}{self.DAMMA}",                                     # 13
             f"{base_b}{self.NOON}{self.ALEF}",                                     # 14
         ]
@@ -262,36 +262,36 @@ class ArabicConjugatorApp:
 
     def _conjugate_present(self, F, A, L, hA, mood):
         prefixes = [
-            self.YAA,
-            self.YAA,
-            self.YAA,
-            self.TAA,
-            self.TAA,
-            self.YAA,
-            self.TAA,
-            self.TAA,
-            self.TAA,
-            self.TAA,
-            self.TAA,
-            self.TAA,
-            self.ALEF,
-            self.NOON,
+            f"{self.YAA}",
+            f"{self.YAA}",
+            f"{self.YAA}",
+            f"{self.TAA}",
+            f"{self.TAA}",
+            f"{self.YAA}",
+            f"{self.TAA}",
+            f"{self.TAA}",
+            f"{self.TAA}",
+            f"{self.TAA}",
+            f"{self.TAA}",
+            f"{self.TAA}",
+            f"{self.ALEF}{self.FATHA}", # uhh why is fatha not adding ???
+            f"{self.NOON}",
         ]
         stem = f"{F}{self.SUKUN}{A}{hA}{L}"
 
         indicative_suffixes = [
             self.DAMMA,
-            f"{self.KASRA}{self.ALEF}{self.NOON}{self.KASRA}",
-            f"{self.DAMMA}{self.WAW}{self.NOON}{self.FATHA}",
+            f"{self.FATHA}{self.ALEF}{self.NOON}{self.KASRA}",
+            f"{self.DAMMA}{self.WAW}{self.SUKUN}{self.NOON}{self.FATHA}",
             self.DAMMA,
-            f"{self.KASRA}{self.ALEF}{self.NOON}{self.KASRA}",
-            f"{self.FATHA}{self.NOON}{self.FATHA}",
+            f"{self.FATHA}{self.ALEF}{self.NOON}{self.KASRA}",
+            f"{self.SUKUN}{self.NOON}{self.FATHA}",
             self.DAMMA,
-            f"{self.KASRA}{self.ALEF}{self.NOON}{self.KASRA}",
-            f"{self.DAMMA}{self.WAW}{self.NOON}{self.FATHA}",
-            f"{self.KASRA}{self.YAA}{self.NOON}{self.KASRA}",
-            f"{self.KASRA}{self.ALEF}{self.NOON}{self.KASRA}",
-            f"{self.FATHA}{self.NOON}{self.FATHA}",
+            f"{self.FATHA}{self.ALEF}{self.NOON}{self.KASRA}",
+            f"{self.DAMMA}{self.WAW}{self.SUKUN}{self.NOON}{self.FATHA}",
+            f"{self.KASRA}{self.YAA}{self.SUKUN}{self.NOON}{self.FATHA}",
+            f"{self.FATHA}{self.ALEF}{self.NOON}{self.KASRA}",
+            f"{self.SUKUN}{self.NOON}{self.FATHA}",
             self.DAMMA,
             self.DAMMA,
         ]
@@ -373,7 +373,7 @@ class ArabicConjugatorApp:
         plural_form = row_data_1st.get("Plural", "---")
         singular_form = row_data_1st.get("Singular", "---")
 
-        table_content += f"l\t {singular_form}\tl {plural_form}\tl 1st person\t\tl{row_ending}"
+        table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
         
         table_content += separator
 
