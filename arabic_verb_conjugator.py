@@ -332,7 +332,6 @@ class ArabicConjugatorApp:
         }
         current_suffixes = mood_rules[mood]
         forms = [f"{prefixes[i]}{self.FATHA}{stem}{current_suffixes[i]}" for i in range(14)]
-        forms[12] = f"{self.ALEF}{stem}{current_suffixes[12]}"
         return forms
 
     def _display_results(self, title, results):
