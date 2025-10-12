@@ -328,8 +328,6 @@ class ArabicConjugatorApp:
 
         display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
 
-        # FIX: Revert to space-based padding with '|' as an anchor.
-        # This string is built in LTR logical order, and bidi.algorithm will reverse it for display.
         PAD = 25
         table_content = ""
         separator = "—" * 25 + "\n"
