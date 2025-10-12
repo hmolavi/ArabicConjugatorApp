@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, scrolledtext
 
 actual_table = False
-DEBUGGIN = True
+DEBUGGIN = False
 
 
 class ArabicConjugatorApp:
