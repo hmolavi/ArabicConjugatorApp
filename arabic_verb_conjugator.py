@@ -221,7 +221,7 @@ class ArabicConjugatorApp:
 
     def _conjugate_past(self, F, A, L, hF, hA):
         base_h = f"{F}{hF}{A}{hA}{L}"
-        sukun_h = f"{F}{hF}{A}{self.SUKUN}{L}"
+        sukun_h = f"{F}{hF}{A}{self.KASRA}{L}"
         forms = [
             f"{base_h}{self.FATHA}",                                    # 1
             f"{base_h}{self.FATHA}{self.ALEF}",                         # 2
