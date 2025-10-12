@@ -48,6 +48,20 @@ class ArabicConjugatorApp:
         "Kasra/Kasra (حَسِبَ / يَحْسِبُ)": (KASRA, KASRA),
     }
 
+    EXAMPLE_VERBS = [
+        {"verb": "فَعَلَ", "bab": "Fatha/Fatha (فَتَحَ / يَفْتَحُ)"},
+        {"verb": "ذَهَبَ", "bab": "Fatha/Fatha (فَتَحَ / يَفْتَحُ)"},
+        {"verb": "كَتَبَ", "bab": "Fatha/Damma (نَصَرَ / يَنْصُرُ)"},
+        {"verb": "جَلَسَ", "bab": "Fatha/Kasra (ضَرَبَ / يَضْرِبُ)"},
+        {"verb": "شَرِبَ", "bab": "Kasra/Fatha (سَمِعَ / يَسْمَعُ)"},
+        {"verb": "كَرُمَ", "bab": "Damma/Damma (كَرُمَ / يَكْرُمُ)"},
+        {"verb": "حَسِبَ", "bab": "Kasra/Kasra (حَسِبَ / يَحْسِبُ)"},
+        {"verb": "قَرَأَ", "bab": "Fatha/Fatha (فَتَحَ / يَفْتَحُ)"},
+        {"verb": "أَكَلَ", "bab": "Fatha/Damma (نَصَرَ / يَنْصُرُ)"},
+        {"verb": "دَخَلَ", "bab": "Fatha/Damma (نَصَرَ / يَنْصُرُ)"},
+    ]
+
+
     def __init__(self, master):
         self.master = master
         master.title("Arabic Verb Conjugator")
@@ -70,11 +84,23 @@ class ArabicConjugatorApp:
         ttk.Label(main_frame, text="1. Enter Past Tense Verb (In هُوَ form, with harakat, e.g., ذَهَبَ):", font=("Arial", 12,)).grid(
             row=0, column=0, sticky=tk.W, pady=5
         )
-        self.root_entry = ttk.Entry(main_frame, font=("Arial", 16), justify="right")
+        self.root_entry = ttk.Entry(main_frame, font=("Arial", 16), justify="right", width=20)
         self.root_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
 
         self.clear_button = ttk.Button(main_frame, text="Clear", command=lambda: self.root_entry.delete(0, tk.END))
         self.clear_button.grid(row=0, column=2, padx=5)
+
+        self.example_verb_var = tk.StringVar()
+        self.example_verb_combo = ttk.Combobox(
+            main_frame, 
+            textvariable=self.example_verb_var, 
+            values=[v['verb'] for v in self.EXAMPLE_VERBS], 
+            font=("Arial", 12),
+            width=10
+        )
+        self.example_verb_combo.grid(row=0, column=3, padx=5)
+        self.example_verb_combo.set("Examples")
+        self.example_verb_combo.bind("<<ComboboxSelected>>", self.on_example_verb_select)
 
         ttk.Label(main_frame, text="2. Select Tense:", font=("Arial", 12,)).grid(row=1, column=0, sticky=tk.W, pady=5)
         ttk.Radiobutton(main_frame, text="Past (الماضي)", variable=self.tense_var, value="Past", command=self.update_present_options).grid(
@@ -140,12 +166,25 @@ class ArabicConjugatorApp:
         self.output_text = scrolledtext.ScrolledText(
             main_frame, wrap=tk.WORD, width=60, height=20, font=("Arial", 18), **{"bd": 1, "relief": tk.SOLID}
         )
-        self.output_text.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.output_text.grid(row=5, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S))
         self.output_text.tag_configure("header", font=("Arial", 18, "bold"), justify="center")
         self.output_text.tag_configure("rtl_output", justify="right")
 
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(5, weight=1)
+        # self.calculate_conjugation()
+
+    def on_example_verb_select(self, event=None):
+        selected_verb_str = self.example_verb_var.get()
+        if not selected_verb_str or selected_verb_str == "Examples":
+            return
+
+        selected_verb_obj = next((item for item in self.EXAMPLE_VERBS if item["verb"] == selected_verb_str), None)
+
+        if selected_verb_obj:
+            self.root_entry.delete(0, tk.END)
+            self.root_entry.insert(0, selected_verb_obj["verb"])
+            self.bab_var.set(selected_verb_obj["bab"])
 
     def update_present_options(self):
         """Shows or hides the Bab/Mood selectors based on the selected tense."""
@@ -213,6 +252,9 @@ class ArabicConjugatorApp:
         self.last_results = None # Clear cache on error
 
     def calculate_conjugation(self):
+        # self.root_entry.delete(0, tk.END)
+        # self.root_entry.insert(0, "فَعَلَ")
+        
         """Main calculation and display function."""
 
         # Tkinter is weird, had to hack it to get input in reverse to get GUI to output properly
