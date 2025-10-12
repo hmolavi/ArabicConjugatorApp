@@ -334,7 +334,6 @@ class ArabicConjugatorApp:
         table_content = ""
         separator = "—" * 25 + "\n"
 
-        # header = f"| {'Singular':<{PAD}}| {'Dual':<{PAD}}| {'Plural':<{PAD}}|\n"
         header = f"| {'Plural':<{PAD}}| {'Dual':<{PAD}}| {'Singular':<{PAD}}|\n"
 
         table_content += separator
