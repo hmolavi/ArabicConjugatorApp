@@ -172,7 +172,6 @@ class ArabicConjugatorApp:
 
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(5, weight=1)
-        # self.calculate_conjugation()
 
     def on_example_verb_select(self, event=None):
         selected_verb_str = self.example_verb_var.get()
@@ -252,9 +251,6 @@ class ArabicConjugatorApp:
         self.last_results = None # Clear cache on error
 
     def calculate_conjugation(self):
-        # self.root_entry.delete(0, tk.END)
-        # self.root_entry.insert(0, "فَعَلَ")
-        
         """Main calculation and display function."""
 
         # Tkinter is weird, had to hack it to get input in reverse to get GUI to output properly
