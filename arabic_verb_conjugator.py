@@ -40,9 +40,9 @@ class ArabicConjugatorApp:
 
     # The 6 major conjugation patterns (Babs)
     BABS = {
+        "Fatha/Fatha (فَتَحَ / يَفْتَحُ)": (FATHA, FATHA),
         "Fatha/Damma (نَصَرَ / يَنْصُرُ)": (FATHA, DAMMA),
         "Fatha/Kasra (ضَرَبَ / يَضْرِبُ)": (FATHA, KASRA),
-        "Fatha/Fatha (فَتَحَ / يَفْتَحُ)": (FATHA, FATHA),
         "Kasra/Fatha (سَمِعَ / يَسْمَعُ)": (KASRA, FATHA),
         "Damma/Damma (كَرُمَ / يَكْرُمُ)": (DAMMA, DAMMA),
         "Kasra/Kasra (حَسِبَ / يَحْسِبُ)": (KASRA, KASRA),
@@ -50,7 +50,7 @@ class ArabicConjugatorApp:
 
     def __init__(self, master):
         self.master = master
-        master.title("Arabic Triliteral Verb Conjugator")
+        master.title("Arabic Verb Conjugator")
 
         self.style = ttk.Style()
         self.style.configure("TButton", font=("Arial", 12))
@@ -116,7 +116,7 @@ class ArabicConjugatorApp:
         self.font_size_combo = ttk.Combobox(
             font_size_frame,
             textvariable=self.font_size_var,
-            values=[12, 14, 16, 18, 20, 22, 24, 26, 28, 30],
+            values=[12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 48],
             width=4,
             state="readonly"
         )
@@ -132,6 +132,9 @@ class ArabicConjugatorApp:
 
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(5, weight=1)
+        
+        
+        self.calculate_conjugation()
 
     def update_present_options(self):
         """Shows or hides the Bab/Mood selectors based on the selected tense."""
@@ -148,7 +151,7 @@ class ArabicConjugatorApp:
 
     def parse_root(self):
         """
-        Parses the full Past Tense verb input (e.g., 'ذَهَبَ') to extract
+        Parses the full Past Tense verb input to extract
         F, A, L letters and the harakat on F and A letters.
         """
         raw_input = self.root_entry.get().strip()[::-1]
@@ -195,7 +198,7 @@ class ArabicConjugatorApp:
         """Main calculation and display function."""
         
         self.root_entry.delete(0, tk.END)
-        self.root_entry.insert(0, "کَتَبَ")
+        self.root_entry.insert(0, "ذَهَبَ")
 
         # Tkinter is weird, had to hack it to get input in reverse to get GUI to output properly
         # F, A, L, past_fa_haraka, past_ayn_haraka = self.parse_root() # Original - correct order
@@ -220,23 +223,23 @@ class ArabicConjugatorApp:
         self._display_results(title, results)
 
     def _conjugate_past(self, F, A, L, hF, hA):
-        base_h = f"{F}{hF}{A}{hA}{L}"
-        sukun_h = f"{F}{hF}{A}{self.KASRA}{L}"
+        base_a = f"{F}{hF}{A}{hA}{L}"
+        base_b = f"{F}{hF}{A}{self.FATHA}{L}{self.SUKUN}"
         forms = [
-            f"{base_h}{self.FATHA}",                                    # 1
-            f"{base_h}{self.FATHA}{self.ALEF}",                         # 2
-            f"{base_h}{self.DAMMA}{self.WAW}{self.ALEF}",               # 3
-            f"{base_h}{self.FATHA}{self.TAA}{self.SUKUN}",              # 4
-            f"{base_h}{self.FATHA}{self.TAA}{self.FATHA}{self.ALEF}",   # 5
-            f"{sukun_h}{self.SUKUN}{self.NOON}{self.FATHA}",            # 6
-            f"{sukun_h}{self.SUKUN}{self.TAA}{self.FATHA}",
-            f"{sukun_h}{self.SUKUN}{self.TAA}{self.DAMMA}{self.MEEM}{self.ALEF}",
-            f"{sukun_h}{self.SUKUN}{self.TAA}{self.DAMMA}{self.MEEM}",
-            f"{sukun_h}{self.SUKUN}{self.TAA}{self.KASRA}",
-            f"{sukun_h}{self.SUKUN}{self.TAA}{self.DAMMA}{self.MEEM}{self.ALEF}",
-            f"{sukun_h}{self.SUKUN}{self.TAA}{self.DAMMA}{self.NOON}{self.SHADDA}{self.KASRA}",
-            f"{sukun_h}{self.SUKUN}{self.TAA}{self.DAMMA}",
-            f"{sukun_h}{self.SUKUN}{self.NOON}{self.ALEF}",
+            f"{base_a}{self.FATHA}",                                               # 1
+            f"{base_a}{self.FATHA}{self.ALEF}",                                    # 2
+            f"{base_a}{self.DAMMA}{self.WAW}{self.ALEF}",                          # 3
+            f"{base_a}{self.FATHA}{self.TAA}{self.SUKUN}",                         # 4
+            f"{base_a}{self.FATHA}{self.TAA}{self.FATHA}{self.ALEF}",              # 5
+            f"{base_b}{self.NOON}{self.FATHA}",                                    # 6
+            f"{base_b}{self.TAA}{self.FATHA}",                                     # 7
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.ALEF}",               # 8
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}",                          # 9
+            f"{base_b}{self.TAA}{self.KASRA}",                                     # 10
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.ALEF}",               # 11
+            f"{base_b}{self.TAA}{self.DAMMA}{self.NOON}{self.SHADDA}{self.KASRA}", # 12
+            f"{base_b}{self.TAA}{self.DAMMA}",                                     # 13
+            f"{base_b}{self.NOON}{self.ALEF}",                                     # 14
         ]
         return dict(zip([p[0] for p in self.PRONOUNS], forms))
 
@@ -328,11 +331,11 @@ class ArabicConjugatorApp:
 
         display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
 
-        PAD = 25
+        PAD = 26
         table_content = ""
-        separator = "—" * 25 + "\n"
+        separator = "—" * 26 + "\n"
 
-        header = f"| {'Plural':<{PAD}}| {'Dual':<{PAD}}| {'Singular':<{PAD}}|\n"
+        header = f"| Plural\t| Dual\t| Singular\t|\n"
 
         table_content += separator
         table_content += header
@@ -344,13 +347,18 @@ class ArabicConjugatorApp:
             dual_form = row_data.get("Dual", "---")
             singular_form = row_data.get("Singular", "---")
 
-            table_content += f"| {singular_form:<{PAD}}| {dual_form:<{PAD}}| {plural_form:<{PAD}}|\n"
+            # Again with the silly switchero because of GUI
+            p_pad = PAD - len(singular_form)
+            d_pad = PAD - len(dual_form)
+            s_pad = PAD - len(plural_form)
+
+            table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\t\tl\n"
 
         row_data_1st = grouped_results.get("1st person", {})
         plural_form = row_data_1st.get("Plural", "---")
         singular_form = row_data_1st.get("Singular", "---")
 
-        table_content += f"| {singular_form:<{PAD}}| {' ':<{PAD}}| {plural_form:<{PAD}}|\n"
+        table_content += f"l\t {singular_form}\tl {plural_form}\tl 1st person\t\t\tl\n"
         
         table_content += separator
 
