@@ -264,7 +264,7 @@ class ArabicConjugatorApp:
             f"{base_b}{self.TAA}{self.DAMMA}",                                     # 13
             f"{base_b}{self.NOON}{self.ALEF}",                                     # 14
         ]
-        return dict(zip([p[0] for p in self.PRONOUNS], forms))
+        return forms
 
     def _conjugate_present(self, F, A, L, hA, mood):
         prefixes = [
@@ -339,7 +339,7 @@ class ArabicConjugatorApp:
         current_suffixes = mood_rules[mood]
         forms = [f"{prefixes[i]}{self.FATHA}{stem}{current_suffixes[i]}" for i in range(14)]
         forms[12] = f"{self.ALEF}{stem}{current_suffixes[12]}"
-        return dict(zip([p[0] for p in self.PRONOUNS], forms))
+        return forms
 
     def _display_results(self, title, results):
         """Formats and displays the 14 conjugations in the required table format."""
@@ -347,10 +347,13 @@ class ArabicConjugatorApp:
         self.output_text.insert(tk.END, f"\n{title}\n\n", "header")
 
         grouped_results = {}
-        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, results.values()):
+        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, results):
             if person_gender not in grouped_results:
                 grouped_results[person_gender] = {}
-            grouped_results[person_gender][num] = verb
+            if num in grouped_results[person_gender]:
+                grouped_results[person_gender][num] += f"\n{verb}"
+            else:
+                grouped_results[person_gender][num] = verb
 
         display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
 
