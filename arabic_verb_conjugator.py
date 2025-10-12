@@ -1,12 +1,15 @@
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 
+# Print the actual GUI table in terminal or seperate formatted table specifically made for terminal
 actual_table = False
+
+# Quickly test the conjugation functionality upon app launch. Automatically insert example verb and conjugate
 DEBUGGIN = False
 
 
 class ArabicConjugatorApp:
-    # --- Unicode Constants for Arabic Diacritics (Harakat) ---
+    # --- Unicode Constants for Arabic Harakat ---
     FATHA = "\u064e"  # یَ
     DAMMA = "\u064f"  # یُ
     KASRA = "\u0650"  # یِ
@@ -64,7 +67,6 @@ class ArabicConjugatorApp:
         {"verb": "دَخَلَ", "bab": "Fatha/Damma (نَصَرَ / يَنْصُرُ)"},
     ]
 
-    # Present-mood options (expandable)
     MOODS = [
         ("Indicative (مرفوع)", "Indicative (مرفوع)"),
         ("Subjunctive (منصوب)", "Subjunctive (منصوب)"),
