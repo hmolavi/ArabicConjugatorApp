@@ -67,7 +67,7 @@ class ArabicConjugatorApp:
         master.columnconfigure(0, weight=1)
         master.rowconfigure(0, weight=1)
 
-        ttk.Label(main_frame, text="1. Enter Past Tense Verb (هو form, with harakat, e.g., ذَهَبَ):", font=("Arial", 12, "bold")).grid(
+        ttk.Label(main_frame, text="1. Enter Past Tense Verb (In هُوَ form, with harakat, e.g., ذَهَبَ):", font=("Arial", 12,)).grid(
             row=0, column=0, sticky=tk.W, pady=5
         )
         self.root_entry = ttk.Entry(main_frame, font=("Arial", 16), justify="right")
@@ -76,7 +76,7 @@ class ArabicConjugatorApp:
         self.clear_button = ttk.Button(main_frame, text="Clear", command=lambda: self.root_entry.delete(0, tk.END))
         self.clear_button.grid(row=0, column=2, padx=5)
 
-        ttk.Label(main_frame, text="2. Select Tense:", font=("Arial", 12, "bold")).grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="2. Select Tense:", font=("Arial", 12,)).grid(row=1, column=0, sticky=tk.W, pady=5)
         ttk.Radiobutton(main_frame, text="Past (الماضي)", variable=self.tense_var, value="Past", command=self.update_present_options).grid(
             row=1, column=1, sticky=tk.W
         )
@@ -86,13 +86,13 @@ class ArabicConjugatorApp:
 
         self.present_frame = ttk.Frame(main_frame)
 
-        ttk.Label(self.present_frame, text="3a. Select Pattern (Bab):", font=("Arial", 12, "bold")).grid(row=0, column=0, sticky=tk.W, pady=2, padx=5)
+        ttk.Label(self.present_frame, text="3a. Select Pattern (Bab):", font=("Arial", 12,)).grid(row=0, column=0, sticky=tk.W, pady=2, padx=5)
         self.bab_combo = ttk.Combobox(
             self.present_frame, textvariable=self.bab_var, values=list(self.BABS.keys()), font=("Arial", 11), state="readonly"
         )
         self.bab_combo.grid(row=0, column=1, columnspan=2, sticky=(tk.W, tk.E), padx=5)
 
-        ttk.Label(self.present_frame, text="3b. Select Mood:", font=("Arial", 12, "bold")).grid(row=1, column=0, sticky=tk.W, pady=2, padx=5)
+        ttk.Label(self.present_frame, text="3b. Select Mood:", font=("Arial", 12,)).grid(row=1, column=0, sticky=tk.W, pady=2, padx=5)
         ttk.Radiobutton(self.present_frame, text="Indicative (مرفوع)", variable=self.mood_var, value="Indicative (مرفوع)").grid(
             row=1, column=1, sticky=tk.W
         )
@@ -116,7 +116,7 @@ class ArabicConjugatorApp:
         controls_frame = ttk.Frame(main_frame)
         controls_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
 
-        ttk.Label(controls_frame, text="Conjugation Output:", font=("Arial", 12, "bold")).pack(side=tk.LEFT)
+        ttk.Label(controls_frame, text="Conjugation Output:", font=("Arial", 12,)).pack(side=tk.LEFT)
 
         ttk.Label(controls_frame, text="Font Size:").pack(side=tk.LEFT, padx=(10, 2))
         self.font_size_combo = ttk.Combobox(
