@@ -294,25 +294,22 @@ class ArabicConjugatorApp:
         if not parsed_values or not parsed_values[0]:
             return
 
-        # For GUI (visually reversed)
-        L_gui, A_gui, F_gui, hA_gui, hF_gui = parsed_values
-
-        # For Terminal (logically correct)
-        F_term, A_term, L_term, hF_term, hA_term = F_gui, A_gui, L_gui, hF_gui, hA_gui
+        # Dont question it, getting the results in reverse just works....
+        L, A, F, hA, hF = parsed_values
 
         tense = self.tense_var.get()
         past_lam_haraka = self.FATHA
 
         if tense == "Past":
-            gui_results = self._conjugate_past(F_gui, A_gui, L_gui, hF_gui, hA_gui)
-            term_results = self._conjugate_past(F_term, A_term, L_term, hF_term, hA_term)
-            title = f"الماضي ({F_term}{hF_term}{A_term}{hA_term}{L_term}{past_lam_haraka})"
+            gui_results = self._conjugate_past(F, A, L, hF, hA)
+            term_results = gui_results
+            title = f"الماضي ({F}{hF}{A}{hA}{L}{past_lam_haraka})"
         else:
             mood = self.mood_var.get()
             selected_bab_key = self.bab_var.get()
             _, present_ayn_haraka = self.BABS[selected_bab_key]
-            gui_results = self._conjugate_present(F_gui, A_gui, L_gui, present_ayn_haraka, mood)
-            term_results = self._conjugate_present(F_term, A_term, L_term, present_ayn_haraka, mood)
+            gui_results = self._conjugate_present(F, A, L, present_ayn_haraka, mood)
+            term_results = gui_results
             title = f"المضارع - {mood} ({selected_bab_key})"
 
         self.last_title = title
