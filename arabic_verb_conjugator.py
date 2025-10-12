@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, scrolledtext
 
+actual_table = False
 
 class ArabicConjugatorApp:
     # --- Unicode Constants for Arabic Diacritics (Harakat) ---
@@ -135,6 +136,7 @@ class ArabicConjugatorApp:
         self.font_size_var = tk.StringVar(value="18")
         self.double_spacing_var = tk.BooleanVar(value=False)
         self.last_results = None
+        self.last_term_results = None
         self.last_title = ""
 
         controls_frame = ttk.Frame(main_frame)
@@ -200,7 +202,7 @@ class ArabicConjugatorApp:
     def redisplay_results(self):
         """Redisplays the last conjugation results, applying current display options."""
         if self.last_results:
-            self._display_results(self.last_title, self.last_results)
+            self._display_results(self.last_title, self.last_results, self.last_term_results)
 
     def parse_root(self):
         """
@@ -250,30 +252,35 @@ class ArabicConjugatorApp:
 
     def calculate_conjugation(self):
         """Main calculation and display function."""
-
-        # Tkinter is weird, had to hack it to get input in reverse to get GUI to output properly
-        # F, A, L, past_fa_haraka, past_ayn_haraka = self.parse_root() # Original - correct order - should be this for printing in terminal
-        L, A, F, past_ayn_haraka, past_fa_haraka = self.parse_root()
-        
-        if not F:
+        parsed_values = self.parse_root()
+        if not parsed_values or not parsed_values[0]:
             return
+
+        # For GUI (visually reversed)
+        L_gui, A_gui, F_gui, hA_gui, hF_gui = parsed_values
+
+        # For Terminal (logically correct)
+        F_term, A_term, L_term, hF_term, hA_term = F_gui, A_gui, L_gui, hF_gui, hA_gui
 
         tense = self.tense_var.get()
         past_lam_haraka = self.FATHA
 
         if tense == "Past":
-            results = self._conjugate_past(F, A, L, past_fa_haraka, past_ayn_haraka)
-            title = f"الماضي ({F}{past_fa_haraka}{A}{past_ayn_haraka}{L}{past_lam_haraka})"
+            gui_results = self._conjugate_past(F_gui, A_gui, L_gui, hF_gui, hA_gui)
+            term_results = self._conjugate_past(F_term, A_term, L_term, hF_term, hA_term)
+            title = f"الماضي ({F_term}{hF_term}{A_term}{hA_term}{L_term}{past_lam_haraka})"
         else:
             mood = self.mood_var.get()
             selected_bab_key = self.bab_var.get()
             _, present_ayn_haraka = self.BABS[selected_bab_key]
-            results = self._conjugate_present(F, A, L, present_ayn_haraka, mood)
+            gui_results = self._conjugate_present(F_gui, A_gui, L_gui, present_ayn_haraka, mood)
+            term_results = self._conjugate_present(F_term, A_term, L_term, present_ayn_haraka, mood)
             title = f"المضارع - {mood} ({selected_bab_key})"
 
         self.last_title = title
-        self.last_results = results
-        self._display_results(title, results)
+        self.last_results = gui_results
+        self.last_term_results = term_results
+        self._display_results(title, gui_results, term_results)
 
     def _conjugate_past(self, F, A, L, hF, hA):
         base_a = f"{F}{hF}{A}{hA}{L}"
@@ -370,52 +377,112 @@ class ArabicConjugatorApp:
         forms = [f"{prefixes[i]}{self.FATHA}{stem}{current_suffixes[i]}" for i in range(14)]
         return forms
 
-    def _display_results(self, title, results):
-        """Formats and displays the 14 conjugations in the required table format."""
-        self.output_text.delete(1.0, tk.END)
-        self.output_text.insert(tk.END, f"\n{title}\n\n", "header")
+    def _display_results(self, title, gui_results, term_results):
+            """Formats and displays the 14 conjugations in the required table format."""
+            self.output_text.delete(1.0, tk.END)
+            self.output_text.insert(tk.END, f"\n{title}\n\n", "header")
+    
+            # --- GUI Table --- 
+            gui_grouped_results = {}
+            for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, gui_results):
+                if person_gender not in gui_grouped_results:
+                    gui_grouped_results[person_gender] = {}
+                if num in gui_grouped_results[person_gender]:
+                    gui_grouped_results[person_gender][num] += f"\n{verb}"
+                else:
+                    gui_grouped_results[person_gender][num] = verb
+    
+            display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
+    
+            row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
+            gui_table_content = ""
+            separator = "—" * 24 + "\n"
+    
+            header = f"| Plural\t| Dual\t| Singular\t|\t\t|\n"
+    
+            gui_table_content += separator
+            gui_table_content += header
+            gui_table_content += separator
+    
+            for pg in display_order:
+                row_data = gui_grouped_results.get(pg, {})
+                plural_form = row_data.get("Plural", "---")
+                dual_form = row_data.get("Dual", "---")
+                singular_form = row_data.get("Singular", "---")
+    
+                gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
+    
+            row_data_1st = gui_grouped_results.get("1st person", {})
+            plural_form = row_data_1st.get("Plural", "---")
+            singular_form = row_data_1st.get("Singular", "---")
+    
+            gui_table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
+            
+            gui_table_content += separator
+    
+            self.output_text.insert(tk.END, gui_table_content)
+    
+            # --- Terminal Table --- 
+            if not actual_table:
+                try:
+                    from arabic_reshaper import ArabicReshaper
+                    from bidi.algorithm import get_display
 
-        grouped_results = {}
-        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, results):
-            if person_gender not in grouped_results:
-                grouped_results[person_gender] = {}
-            if num in grouped_results[person_gender]:
-                grouped_results[person_gender][num] += f"\n{verb}"
+                    # Configuration for the reshaper to keep harakat
+                    configuration = {
+                        'delete_harakat': False,
+                        'shift_harakat_position': True,
+                    }
+                    reshaper = ArabicReshaper(configuration=configuration)
+    
+                    term_grouped_results = {}
+                    for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, term_results):
+                        if person_gender not in term_grouped_results:
+                            term_grouped_results[person_gender] = {}
+                        if num in term_grouped_results[person_gender]:
+                            term_grouped_results[person_gender][num] += f", {verb}"
+                        else:
+                            term_grouped_results[person_gender][num] = verb
+    
+                    term_table_content = ""
+                    term_table_content += f"{title}\n"
+                    term_table_content += "=" * 80 + "\n"
+                    
+                    display_order_term = ["3rd person male", "3rd person female", "2nd person male", "2nd person female", "1st person"]
+                    
+                    header = f"{'Plural':>20} | {'Dual':>20} | {'Singular':>20} | {'Person':<20}\n"
+                    term_table_content += header
+                    term_table_content += "-" * len(header) + "\n"
+    
+                    for pg in display_order_term:
+                        row_data = term_grouped_results.get(pg, {})
+                        plural_form = row_data.get("Plural", "---")
+                        dual_form = row_data.get("Dual", "---")
+                        singular_form = row_data.get("Singular", "---")
+                        if pg == "1st person":
+                            dual_form = "---"
+                        
+                        def pad(text):
+                            padding = max(0, 23 - len(text))
+                            return text + " " * padding
+                        
+                        term_table_content += f"A {pad(pg)} B {pad(singular_form)} C {pad(dual_form)} D {pad(plural_form)} E\n"
+    
+                    term_table_content += "=" * 80 + "\n"
+                    
+                    reshaped_text = reshaper.reshape(term_table_content)
+                    bidi_text = get_display(reshaped_text)
+                    print(bidi_text)
+    
+                except ImportError:
+                    print("For correct terminal display, please install required libraries:")
+                    print("pip3 install arabic_reshaper python-bidi")
+                    
+                    print("\n--- (GUI Table Output) ---\n")
+                    # Fallback to printing the GUI content if libraries are not found
+                    print(gui_table_content) 
             else:
-                grouped_results[person_gender][num] = verb
-
-        display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
-
-        row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
-        table_content = ""
-        separator = "—" * 24 + "\n"
-
-        header = f"| Plural\t| Dual\t| Singular\t|\t\t|\n"
-
-        table_content += separator
-        table_content += header
-        table_content += separator
-
-        for pg in display_order:
-            row_data = grouped_results.get(pg, {})
-            plural_form = row_data.get("Plural", "---")
-            dual_form = row_data.get("Dual", "---")
-            singular_form = row_data.get("Singular", "---")
-
-            table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
-
-        row_data_1st = grouped_results.get("1st person", {})
-        plural_form = row_data_1st.get("Plural", "---")
-        singular_form = row_data_1st.get("Singular", "---")
-
-        table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
-        
-        table_content += separator
-
-        print(table_content)
-        self.output_text.insert(tk.END, table_content)
-
-
+                print(gui_table_content)
 if __name__ == "__main__":
     root = tk.Tk()
     app = ArabicConjugatorApp(root)
