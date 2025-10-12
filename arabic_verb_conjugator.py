@@ -63,7 +63,6 @@ class ArabicConjugatorApp:
         {"verb": "دَخَلَ", "bab": "Fatha/Damma (نَصَرَ / يَنْصُرُ)"},
     ]
 
-
     def __init__(self, master):
         self.master = master
         master.title("Arabic Verb Conjugator")
@@ -83,9 +82,14 @@ class ArabicConjugatorApp:
         master.columnconfigure(0, weight=1)
         master.rowconfigure(0, weight=1)
 
-        ttk.Label(main_frame, text="1. Enter Past Tense Verb (In هُوَ form, with harakat, e.g., ذَهَبَ):", font=("Arial", 12,)).grid(
-            row=0, column=0, sticky=tk.W, pady=5
-        )
+        ttk.Label(
+            main_frame,
+            text="1. Enter Past Tense Verb (In هُوَ form, with harakat, e.g., ذَهَبَ):",
+            font=(
+                "Arial",
+                12,
+            ),
+        ).grid(row=0, column=0, sticky=tk.W, pady=5)
         self.root_entry = ttk.Entry(main_frame, font=("Arial", 16), justify="right", width=20)
         self.root_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
 
@@ -94,11 +98,7 @@ class ArabicConjugatorApp:
 
         self.example_verb_var = tk.StringVar()
         self.example_verb_combo = ttk.Combobox(
-            main_frame, 
-            textvariable=self.example_verb_var, 
-            values=[v['verb'] for v in self.EXAMPLE_VERBS], 
-            font=("Arial", 12),
-            width=10
+            main_frame, textvariable=self.example_verb_var, values=[v["verb"] for v in self.EXAMPLE_VERBS], font=("Arial", 12), width=10
         )
         self.example_verb_combo.grid(row=0, column=3, padx=5)
         self.example_verb_combo.set("Examples")
@@ -106,19 +106,44 @@ class ArabicConjugatorApp:
 
         tense_frame = ttk.Frame(main_frame)
         tense_frame.grid(row=1, column=0, columnspan=4, sticky=tk.W, pady=5)
-        ttk.Label(tense_frame, text="2. Select Tense:", font=("Arial", 12,)).pack(side=tk.LEFT)
-        ttk.Radiobutton(tense_frame, text="Past (الماضي)", variable=self.tense_var, value="Past", command=self.update_present_options).pack(side=tk.LEFT, padx=5)
-        ttk.Radiobutton(tense_frame, text="Present (المضارع)", variable=self.tense_var, value="Present", command=self.update_present_options).pack(side=tk.LEFT, padx=5)
+        ttk.Label(
+            tense_frame,
+            text="2. Select Tense:",
+            font=(
+                "Arial",
+                12,
+            ),
+        ).pack(side=tk.LEFT)
+        ttk.Radiobutton(tense_frame, text="Past (الماضي)", variable=self.tense_var, value="Past", command=self.update_present_options).pack(
+            side=tk.LEFT, padx=5
+        )
+        ttk.Radiobutton(tense_frame, text="Present (المضارع)", variable=self.tense_var, value="Present", command=self.update_present_options).pack(
+            side=tk.LEFT, padx=5
+        )
 
         self.present_frame = ttk.Frame(main_frame)
 
-        ttk.Label(self.present_frame, text="3a. Select Pattern (Bab):", font=("Arial", 12,)).grid(row=0, column=0, sticky=tk.W, pady=2, padx=5)
+        ttk.Label(
+            self.present_frame,
+            text="3a. Select Pattern (Bab):",
+            font=(
+                "Arial",
+                12,
+            ),
+        ).grid(row=0, column=0, sticky=tk.W, pady=2, padx=5)
         self.bab_combo = ttk.Combobox(
             self.present_frame, textvariable=self.bab_var, values=list(self.BABS.keys()), font=("Arial", 11), state="readonly"
         )
         self.bab_combo.grid(row=0, column=1, columnspan=2, sticky=(tk.W, tk.E), padx=5)
 
-        ttk.Label(self.present_frame, text="3b. Select Mood:", font=("Arial", 12,)).grid(row=1, column=0, sticky=tk.W, pady=2, padx=5)
+        ttk.Label(
+            self.present_frame,
+            text="3b. Select Mood:",
+            font=(
+                "Arial",
+                12,
+            ),
+        ).grid(row=1, column=0, sticky=tk.W, pady=2, padx=5)
         ttk.Radiobutton(self.present_frame, text="Indicative (مرفوع)", variable=self.mood_var, value="Indicative (مرفوع)").grid(
             row=1, column=1, sticky=tk.W
         )
@@ -143,25 +168,23 @@ class ArabicConjugatorApp:
         controls_frame = ttk.Frame(main_frame)
         controls_frame.grid(row=4, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
 
-        ttk.Label(controls_frame, text="Conjugation Output:", font=("Arial", 12,)).pack(side=tk.LEFT)
+        ttk.Label(
+            controls_frame,
+            text="Conjugation Output:",
+            font=(
+                "Arial",
+                12,
+            ),
+        ).pack(side=tk.LEFT)
 
         ttk.Label(controls_frame, text="Font Size:").pack(side=tk.LEFT, padx=(10, 2))
         self.font_size_combo = ttk.Combobox(
-            controls_frame,
-            textvariable=self.font_size_var,
-            values=[12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 48],
-            width=4,
-            state="readonly"
+            controls_frame, textvariable=self.font_size_var, values=[12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 48], width=4, state="readonly"
         )
         self.font_size_combo.pack(side=tk.LEFT)
         self.font_size_combo.bind("<<ComboboxSelected>>", self.update_font_size)
 
-        self.spacing_check = ttk.Checkbutton(
-            controls_frame,
-            text="Double Spacing",
-            variable=self.double_spacing_var,
-            command=self.redisplay_results
-        )
+        self.spacing_check = ttk.Checkbutton(controls_frame, text="Double Spacing", variable=self.double_spacing_var, command=self.redisplay_results)
         self.spacing_check.pack(side=tk.LEFT, padx=10)
 
         self.output_text = scrolledtext.ScrolledText(
@@ -215,7 +238,7 @@ class ArabicConjugatorApp:
         """
         raw_input = self.root_entry.get().strip()[::-1]
 
-        clean_input = "".join(c for c in raw_input if "\u0600" <= c <= "\u06FF" or c in self.HARAKAT)
+        clean_input = "".join(c for c in raw_input if "\u0600" <= c <= "\u06ff" or c in self.HARAKAT)
         letters_only = "".join(c for c in clean_input if c not in self.HARAKAT)
 
         if len(letters_only) < 3:
@@ -252,7 +275,7 @@ class ArabicConjugatorApp:
         """Displays an error message in the output area."""
         self.output_text.delete(1.0, tk.END)
         self.output_text.insert(tk.END, message, "header")
-        self.last_results = None # Clear cache on error
+        self.last_results = None  # Clear cache on error
 
     def calculate_conjugation(self):
         """Main calculation and display function."""
@@ -387,111 +410,142 @@ class ArabicConjugatorApp:
         return forms
 
     def _display_results(self, title, gui_results, term_results):
-            """Formats and displays the 14 conjugations in the required table format."""
-            self.output_text.delete(1.0, tk.END)
-            self.output_text.insert(tk.END, f"\n{title}\n\n", "header")
-    
-            # --- GUI Table --- 
-            gui_grouped_results = {}
-            for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, gui_results):
-                if person_gender not in gui_grouped_results:
-                    gui_grouped_results[person_gender] = {}
-                if num in gui_grouped_results[person_gender]:
-                    gui_grouped_results[person_gender][num] += f"\n{verb}"
-                else:
-                    gui_grouped_results[person_gender][num] = verb
-    
-            display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
-    
-            row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
-            gui_table_content = ""
-            separator = "—" * 24 + "\n"
-    
-            header = f"| Plural\t| Dual\t| Singular\t|\t\t|\n"
-    
-            gui_table_content += separator
-            gui_table_content += header
-            gui_table_content += separator
-    
-            for pg in display_order:
-                row_data = gui_grouped_results.get(pg, {})
-                plural_form = row_data.get("Plural", "---")
-                dual_form = row_data.get("Dual", "---")
-                singular_form = row_data.get("Singular", "---")
-    
-                gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
-    
-            row_data_1st = gui_grouped_results.get("1st person", {})
-            plural_form = row_data_1st.get("Plural", "---")
-            singular_form = row_data_1st.get("Singular", "---")
-    
-            gui_table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
-            
-            gui_table_content += separator
-    
-            self.output_text.insert(tk.END, gui_table_content)
-    
-            # --- Terminal Table --- 
-            if not actual_table:
-                try:
-                    from arabic_reshaper import ArabicReshaper
-                    from bidi.algorithm import get_display
+        """Formats and displays the 14 conjugations in the required table format."""
+        self.output_text.delete(1.0, tk.END)
+        self.output_text.insert(tk.END, f"\n{title}\n\n", "header")
 
-                    # Configuration for the reshaper to keep harakat
-                    configuration = {
-                        'delete_harakat': False,
-                        'shift_harakat_position': True,
-                    }
-                    reshaper = ArabicReshaper(configuration=configuration)
-    
-                    term_grouped_results = {}
-                    for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, term_results):
-                        if person_gender not in term_grouped_results:
-                            term_grouped_results[person_gender] = {}
-                        if num in term_grouped_results[person_gender]:
-                            term_grouped_results[person_gender][num] += f", {verb}"
-                        else:
-                            term_grouped_results[person_gender][num] = verb
-    
-                    term_table_content = ""
-                    term_table_content += f"{title}\n"
-                    term_table_content += "=" * 80 + "\n"
-                    
-                    display_order_term = ["3rd person male", "3rd person female", "2nd person male", "2nd person female", "1st person"]
-                    
-                    header = f"{'Plural':>20} | {'Dual':>20} | {'Singular':>20} | {'Person':<20}\n"
-                    term_table_content += header
-                    term_table_content += "-" * len(header) + "\n"
-    
-                    for pg in display_order_term:
-                        row_data = term_grouped_results.get(pg, {})
-                        plural_form = row_data.get("Plural", "---")
-                        dual_form = row_data.get("Dual", "---")
-                        singular_form = row_data.get("Singular", "---")
-                        if pg == "1st person":
-                            dual_form = "---"
-                        
-                        def pad(text):
-                            padding = max(0, 23 - len(text))
-                            return text + " " * padding
-                        
-                        term_table_content += f"A {pad(pg)} B {pad(singular_form)} C {pad(dual_form)} D {pad(plural_form)} E\n"
-    
-                    term_table_content += "=" * 80 + "\n"
-                    
-                    reshaped_text = reshaper.reshape(term_table_content)
-                    bidi_text = get_display(reshaped_text)
-                    print(bidi_text)
-    
-                except ImportError:
-                    print("For correct terminal display, please install required libraries:")
-                    print("pip3 install arabic_reshaper python-bidi")
-                    
-                    print("\n--- (GUI Table Output) ---\n")
-                    # Fallback to printing the GUI content if libraries are not found
-                    print(gui_table_content) 
+        # --- GUI Table ---
+        gui_grouped_results = {}
+        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, gui_results):
+            if person_gender not in gui_grouped_results:
+                gui_grouped_results[person_gender] = {}
+            if num in gui_grouped_results[person_gender]:
+                gui_grouped_results[person_gender][num] += f"\n{verb}"
             else:
+                gui_grouped_results[person_gender][num] = verb
+
+        display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
+
+        row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
+        gui_table_content = ""
+        separator = "—" * 24 + "\n"
+
+        header = f"| Plural\t| Dual\t| Singular\t|\t\t|\n"
+
+        gui_table_content += separator
+        gui_table_content += header
+        gui_table_content += separator
+
+        for pg in display_order:
+            row_data = gui_grouped_results.get(pg, {})
+            plural_form = row_data.get("Plural", "---")
+            dual_form = row_data.get("Dual", "---")
+            singular_form = row_data.get("Singular", "---")
+
+            gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
+
+        row_data_1st = gui_grouped_results.get("1st person", {})
+        plural_form = row_data_1st.get("Plural", "---")
+        singular_form = row_data_1st.get("Singular", "---")
+
+        gui_table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
+
+        gui_table_content += separator
+
+        self.output_text.insert(tk.END, gui_table_content)
+
+        # --- Terminal Table ---
+        if not actual_table:
+            try:
+                from arabic_reshaper import ArabicReshaper
+                from bidi.algorithm import get_display
+
+                # Configuration for the reshaper to keep harakat
+                configuration = {
+                    "delete_harakat": False,
+                    "shift_harakat_position": True,
+                }
+                reshaper = ArabicReshaper(configuration=configuration)
+
+                term_grouped_results = {}
+                for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, term_results):
+                    if person_gender not in term_grouped_results:
+                        term_grouped_results[person_gender] = {}
+                    if num in term_grouped_results[person_gender]:
+                        term_grouped_results[person_gender][num] += f", {verb}"
+                    else:
+                        term_grouped_results[person_gender][num] = verb
+
+                term_table_content = ""
+                term_table_content += f"{title}\n"
+                term_table_content += "=" * 77 + "\n"
+
+                display_order_term = ["3rd person male", "3rd person female", "2nd person male", "2nd person female", "1st person"]
+
+                header = "{0:^{p}} | {1:^{d}} | {2:^{s}} | {3:^{per}}\n".format(
+                    "Plural",
+                    "Dual",
+                    "Singular",
+                    "Person",
+                    p=16,
+                    d=13,
+                    s=21,
+                    per=16,
+                )
+                term_table_content += header
+                term_table_content += "-" * 77 + "\n"
+
+                # Helper to produce visual cell (reshape + bidi) when libraries are present
+                def make_visual(cell):
+                    if cell is None:
+                        return ""
+                    cell = str(cell)
+                    if cell == "---":
+                        return cell
+                    try:
+                        reshaped = reshaper.reshape(cell)
+                        visual = get_display(reshaped)
+                        return visual
+                    except Exception:
+                        # If reshaper/bidi fail for some reason, return the logical cell
+                        return cell
+
+                for pg in display_order_term:
+                    row_data = term_grouped_results.get(pg, {})
+                    plural_form = row_data.get("Plural", "---")
+                    dual_form = row_data.get("Dual", "---")
+                    singular_form = row_data.get("Singular", "---")
+                    if pg == "1st person":
+                        dual_form = "-------"
+
+                    plural_vis = make_visual(plural_form)
+                    dual_vis = make_visual(dual_form)
+                    singular_vis = make_visual(singular_form)
+                    person_vis = make_visual(pg)
+
+                    # Pad based on visual lengths so columns line up after bidi
+                    plural_col = plural_vis + "\t\t"
+                    dual_col = dual_vis + "   \t"
+                    singular_col = singular_vis + "  \t\t"
+                    person_col = person_vis
+
+                    # Assemble row with ASCII separators (these stay in place)
+                    term_table_content += f"{plural_col} | {dual_col} | {singular_col} | {person_col}\n"
+
+                term_table_content += "=" * 77 + "\n"
+                print(term_table_content)
+
+            except ImportError:
+                print("For correct terminal display, please install required libraries:")
+                print("pip3 install arabic_reshaper python-bidi")
+
+                print("\n--- (GUI Table Output) ---\n")
+                # Fallback to printing the GUI content if libraries are not found
                 print(gui_table_content)
+        else:
+            print(gui_table_content)
+
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = ArabicConjugatorApp(root)
