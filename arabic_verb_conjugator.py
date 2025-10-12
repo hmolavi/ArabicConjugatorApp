@@ -146,9 +146,6 @@ class ArabicConjugatorApp:
 
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(5, weight=1)
-        
-        
-        self.calculate_conjugation()
 
     def update_present_options(self):
         """Shows or hides the Bab/Mood selectors based on the selected tense."""
@@ -217,9 +214,6 @@ class ArabicConjugatorApp:
 
     def calculate_conjugation(self):
         """Main calculation and display function."""
-        
-        self.root_entry.delete(0, tk.END)
-        self.root_entry.insert(0, "ذَهَبَ")
 
         # Tkinter is weird, had to hack it to get input in reverse to get GUI to output properly
         # F, A, L, past_fa_haraka, past_ayn_haraka = self.parse_root() # Original - correct order
@@ -383,7 +377,6 @@ class ArabicConjugatorApp:
         
         table_content += separator
 
-        # Apply reshaping and bidi algorithm to the entire table string at once for correct rendering.
         print(table_content)
         self.output_text.insert(tk.END, table_content)
 
