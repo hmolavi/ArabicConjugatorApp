@@ -252,7 +252,7 @@ class ArabicConjugatorApp:
         """Main calculation and display function."""
 
         # Tkinter is weird, had to hack it to get input in reverse to get GUI to output properly
-        # F, A, L, past_fa_haraka, past_ayn_haraka = self.parse_root() # Original - correct order
+        # F, A, L, past_fa_haraka, past_ayn_haraka = self.parse_root() # Original - correct order - should be this for printing in terminal
         L, A, F, past_ayn_haraka, past_fa_haraka = self.parse_root()
         
         if not F:
