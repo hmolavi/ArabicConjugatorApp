@@ -86,13 +86,13 @@ class ArabicConjugatorApp:
 
         self.present_frame = ttk.Frame(main_frame)
 
-        ttk.Label(self.present_frame, text="3a. Select Pattern (Bab):", font=("Arial", 10, "bold")).grid(row=0, column=0, sticky=tk.W, pady=2, padx=5)
+        ttk.Label(self.present_frame, text="3a. Select Pattern (Bab):", font=("Arial", 12, "bold")).grid(row=0, column=0, sticky=tk.W, pady=2, padx=5)
         self.bab_combo = ttk.Combobox(
             self.present_frame, textvariable=self.bab_var, values=list(self.BABS.keys()), font=("Arial", 11), state="readonly"
         )
         self.bab_combo.grid(row=0, column=1, columnspan=2, sticky=(tk.W, tk.E), padx=5)
 
-        ttk.Label(self.present_frame, text="3b. Select Mood:", font=("Arial", 10, "bold")).grid(row=1, column=0, sticky=tk.W, pady=2, padx=5)
+        ttk.Label(self.present_frame, text="3b. Select Mood:", font=("Arial", 12, "bold")).grid(row=1, column=0, sticky=tk.W, pady=2, padx=5)
         ttk.Radiobutton(self.present_frame, text="Indicative (مرفوع)", variable=self.mood_var, value="Indicative (مرفوع)").grid(
             row=1, column=1, sticky=tk.W
         )
