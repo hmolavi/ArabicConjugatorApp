@@ -517,71 +517,21 @@ class ArabicConjugatorApp:
         """Formats and displays the 14 conjugations in the required table format."""
         is_headless = getattr(self, "headless", False)
 
-        if not is_headless:
-            # GUI output (only when running with the real GUI widgets)
-            self.output_text.delete(1.0, tk.END)
-            # Decide whether GUI text needs reversing/reshaping based on environment
-            title_to_show = format_text_gui(title)
+        # Build terminal grouped results (used for both GUI and headless paths)
+        term_grouped_results = {}
+        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, term_results):
+            if person_gender not in term_grouped_results:
+                term_grouped_results[person_gender] = {}
+            if num in term_grouped_results[person_gender]:
+                term_grouped_results[person_gender][num] += f", {verb}"
+            else:
+                term_grouped_results[person_gender][num] = verb
 
-            self.output_text.insert(tk.END, f"\n{title_to_show}\n\n", "header")
-
-            # --- GUI Table ---
-            gui_grouped_results = {}
-            for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, gui_results):
-                if person_gender not in gui_grouped_results:
-                    gui_grouped_results[person_gender] = {}
-                if num in gui_grouped_results[person_gender]:
-                    gui_grouped_results[person_gender][num] += f"\n{verb}"
-                else:
-                    gui_grouped_results[person_gender][num] = verb
-
-            display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
-
-            row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
-            gui_table_content = ""
-            separator = "—" * 24 + "\n"
-
-            header = f"| Plural\t| Dual\t| Singular\t|\t\t|\n"
-
-            gui_table_content += separator
-            gui_table_content += header
-            gui_table_content += separator
-
-            for pg in display_order:
-                row_data = gui_grouped_results.get(pg, {})
-                plural_form = format_text_gui(row_data.get("Plural", "---"))
-                dual_form = format_text_gui(row_data.get("Dual", "---"))
-                singular_form = format_text_gui(row_data.get("Singular", "---"))
-
-                gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
-
-            row_data_1st = gui_grouped_results.get("1st person", {})
-            plural_form = format_text_gui(row_data_1st.get("Plural", "---"))
-            singular_form = format_text_gui(row_data_1st.get("Singular", "---"))
-
-            gui_table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
-
-            gui_table_content += separator
-
-            self.output_text.insert(tk.END, gui_table_content)
-
-
-            term_grouped_results = {}
-            for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, term_results):
-                if person_gender not in term_grouped_results:
-                    term_grouped_results[person_gender] = {}
-                if num in term_grouped_results[person_gender]:
-                    term_grouped_results[person_gender][num] += f", {verb}"
-                else:
-                    term_grouped_results[person_gender][num] = verb
-
+        # If running headless (CLI), emit the terminal table and return
+        if is_headless:
             term_table_content = ""
-            # Visualize title as well so harakat and RTL ordering show correctly in terminal
-            # Terminal: consult environment to see if we need to reshape/reverse
             term_should_reverse = should_reverse_terminal_text()
-
             title_vis = format_text_terminal(title)
-
             term_table_content += f"{title_vis}\n"
             term_table_content += "=" * 77 + "\n"
 
@@ -600,18 +550,14 @@ class ArabicConjugatorApp:
             term_table_content += header
             term_table_content += "-" * 77 + "\n"
 
-            # Helper to produce visual cell (reshape + bidi) when libraries are present
             def make_visual(cell):
                 if cell is None:
                     return ""
                 cell = str(cell)
                 if cell == "---":
                     return cell
-
-                # If terminal doesn't require reversal, return logical cell
                 if not term_should_reverse:
                     return cell
-
                 return format_text_terminal(cell)
 
             for pg in display_order_term:
@@ -631,7 +577,6 @@ class ArabicConjugatorApp:
                 if not should_reverse_gui_text():
                     extra = " "
 
-                # Pad based on visual lengths so columns line up after bidi
                 plural_col = plural_vis + "\t\t"
                 dual_col = dual_vis + extra + "  \t"
                 singular_col = singular_vis + "  \t"
@@ -642,11 +587,58 @@ class ArabicConjugatorApp:
                 else:
                     extra = "\t"
 
-                # Assemble row with ASCII separators (these stay in place)
                 term_table_content += f"{extra}{plural_col} l {dual_col}{extra} l {singular_col}{extra} l {person_col} \n"
 
             term_table_content += "=" * 77 + "\n"
             print(term_table_content)
+            return
+
+        # GUI output (only when running with the real GUI widgets)
+        self.output_text.delete(1.0, tk.END)
+        # Decide whether GUI text needs reversing/reshaping based on environment
+        title_to_show = format_text_gui(title)
+
+        self.output_text.insert(tk.END, f"\n{title_to_show}\n\n", "header")
+
+        # --- GUI Table ---
+        gui_grouped_results = {}
+        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, gui_results):
+            if person_gender not in gui_grouped_results:
+                gui_grouped_results[person_gender] = {}
+            if num in gui_grouped_results[person_gender]:
+                gui_grouped_results[person_gender][num] += f"\n{verb}"
+            else:
+                gui_grouped_results[person_gender][num] = verb
+
+        display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
+
+        row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
+        gui_table_content = ""
+        separator = "—" * 24 + "\n"
+
+        header = f"| Plural\t| Dual\t| Singular\t|\t\t|\n"
+
+        gui_table_content += separator
+        gui_table_content += header
+        gui_table_content += separator
+
+        for pg in display_order:
+            row_data = gui_grouped_results.get(pg, {})
+            plural_form = format_text_gui(row_data.get("Plural", "---"))
+            dual_form = format_text_gui(row_data.get("Dual", "---"))
+            singular_form = format_text_gui(row_data.get("Singular", "---"))
+
+            gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
+
+        row_data_1st = gui_grouped_results.get("1st person", {})
+        plural_form = format_text_gui(row_data_1st.get("Plural", "---"))
+        singular_form = format_text_gui(row_data_1st.get("Singular", "---"))
+
+        gui_table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
+
+        gui_table_content += separator
+
+        self.output_text.insert(tk.END, gui_table_content)
 
 
 if __name__ == "__main__":
