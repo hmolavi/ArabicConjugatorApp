@@ -677,6 +677,15 @@ Examples:
     python3 arabic_verb_conjugator.py --verb "فَعَلَ"
     python3 arabic_verb_conjugator.py --verb "كَتَبَ" --tense present --bab f_d --mood i
 
+    Terminal reversal control:
+        --force-reverse-terminal
+            Force the terminal-style reshaping and bidirectional reordering for Arabic output
+            (useful on "dumb" terminals that do not render Arabic properly).
+
+        --no-reverse-terminal
+            Disable terminal reshaping/reordering and print logical Arabic strings directly
+            (useful on terminals that already support Arabic properly).
+
 Notes:
     - The verb must include Arabic diacritics (harakat) on at least the first two
         root letters so the parser can identify F, A, L and their harakat.
