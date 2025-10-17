@@ -140,9 +140,8 @@ class ArabicConjugatorApp:
     MOODS = [
         ("Indicative (مرفوع)", "Indicative (مرفوع)"),
         ("Subjunctive (منصوب)", "Subjunctive (منصوب)"),
-
         # ================= Under development =================
-        #("Jussive (مجزوم)", "Jussive (مجزوم)"), 
+        # ("Jussive (مجزوم)", "Jussive (مجزوم)"),
     ]
 
     def __init__(self, master):
