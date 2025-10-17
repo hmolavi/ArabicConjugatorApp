@@ -571,6 +571,45 @@ class ArabicConjugatorApp:
 
 
 if __name__ == "__main__":
+    # If user explicitly requests help, print a friendly, professional help message
+    if any(h in sys.argv for h in ("--help", "-h")):
+        help_text = r"""
+Arabic Verb Conjugator — CLI Usage
+
+Description:
+    Conjugate 3-letter Arabic verbs (with harakat) from the command line. Provide the
+    past-tense form (هُوَ) including diacritics and choose tense/mood/pattern for
+    present-tense conjugation when needed.
+
+Options:
+    --verb <VERB>       Past tense verb (3 letters with harakat), e.g. ذَهَبَ
+    --tense <past|present>
+                                             Choose 'past' (default) or 'present'
+    --bab <f_f|f_d|f_k|k_f|d_d|k_k>
+                                             Present pattern shorthand (only used when --tense present)
+                                             f_f: Fatha/Fatha
+                                             f_d: Fatha/Damma
+                                             f_k: Fatha/Kasra
+                                             k_f: Kasra/Fatha
+                                             d_d: Damma/Damma
+                                             k_k: Kasra/Kasra
+    --mood <indicative|i|subjunctive|s>
+                                             Mood for present tense (default: indicative)
+
+Examples:
+    python3 arabic_verb_conjugator.py --verb "فَعَلَ"
+    python3 arabic_verb_conjugator.py --verb "كَتَبَ" --tense present --bab f_d --mood i
+
+Notes:
+    - The verb must include Arabic diacritics (harakat) on at least the first two
+        root letters so the parser can identify F, A, L and their harakat.
+    - For correct terminal rendering of Arabic with diacritics, consider installing:
+            pip3 install arabic_reshaper python-bidi
+
+"""
+        print(help_text)
+        sys.exit(0)
+
     # --- CLI handling ---
     parser = argparse.ArgumentParser(description="Arabic Verb Conjugator - CLI mode")
     parser.add_argument("--verb", dest="verb", help="Past tense verb (3 letters with harakat), e.g., ذَهَبَ")
