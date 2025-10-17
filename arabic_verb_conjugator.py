@@ -1,5 +1,74 @@
 import argparse
 import sys
+import os
+import platform
+from arabic_reshaper import ArabicReshaper
+from bidi.algorithm import get_display
+
+
+def should_reverse_terminal_text():
+    """
+    Determines if Arabic text needs to be reshaped and reversed for terminal display.
+
+    Returns:
+        bool: True if the terminal is "dumb" and requires a fix (e.g., VS Code, legacy Windows cmd).
+              False if the terminal is "smart" and handles Arabic correctly (e.g., macOS Terminal, Windows Terminal).
+    """
+    # --- Check for modern Windows Terminal ---
+    if os.environ.get("WT_SESSION"):
+        return False
+
+    # --- Check for modern macOS Terminals ---
+    term_program = os.environ.get("TERM_PROGRAM")
+    if term_program in ["Apple_Terminal", "iTerm.app"]:
+        print("mac W")
+        return False
+
+    # Default: assume terminal needs fix
+    print("-aaaa- Non-smart terminal detected. Environment variables:")
+    # for key, value in os.environ.items():
+    #     print(f"{key}: {value}")
+    return True
+
+
+def should_reverse_gui_text():
+    """
+    Determines if Arabic text needs to be reshaped and reversed for GUI display.
+
+    Returns:
+        bool: True if the OS is likely a minimal environment (like Linux on Replit)
+              that requires a fix. False otherwise.
+    """
+    return platform.system() == "Linux"
+
+
+def format_text_gui(text):
+    """Return a GUI-ready string: reshape + bidi if GUI environment requires it and reshaper is available."""
+    if not text:
+        return text
+    if not should_reverse_gui_text():
+        return text
+    try:
+        cfg = {"delete_harakat": False, "shift_harakat_position": False}
+        return get_display(ArabicReshaper(configuration=cfg).reshape(str(text)))
+    except Exception:
+        pass
+    return text
+
+
+def format_text_terminal(text):
+    """Return a terminal-ready string: reshape + bidi if terminal requires it and reshaper available."""
+    if not text:
+        return text
+    if not should_reverse_terminal_text():
+        return text
+    try:
+        cfg = {"delete_harakat": False, "shift_harakat_position": True}
+        return get_display(ArabicReshaper(configuration=cfg).reshape(str(text)))
+    except Exception:
+        pass
+    return text
+
 
 # Delay tkinter imports until GUI is actually needed so the script can run
 # in environments without tkinter (headless/CLI mode).
@@ -11,9 +80,6 @@ except Exception:
     tk = None
     ttk = None
     scrolledtext = None
-
-# Print the actual GUI table in terminal or seperate formatted table specifically made for terminal
-actual_table = False
 
 # Quickly test the conjugation functionality upon app launch. Automatically insert example verb and conjugate
 DEBUGGIN = False
@@ -107,7 +173,7 @@ class ArabicConjugatorApp:
 
         ttk.Label(
             main_frame,
-            text="1. Enter Past Tense Verb (In هُوَ form, with harakat, e.g., ذَهَبَ):",
+            text=format_text_gui("1. Enter Past Tense Verb (In هُوَ form, with harakat, e.g., ذَهَبَ):"),
             font=(
                 "Arial",
                 12,
@@ -116,52 +182,65 @@ class ArabicConjugatorApp:
         self.root_entry = ttk.Entry(main_frame, font=("Arial", 16), justify="right", width=20)
         self.root_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
 
-        self.clear_button = ttk.Button(main_frame, text="Clear", command=lambda: self.root_entry.delete(0, tk.END))
+        self.clear_button = ttk.Button(main_frame, text=format_text_gui("Clear"), command=lambda: self.root_entry.delete(0, tk.END))
         self.clear_button.grid(row=0, column=2, padx=5)
 
         self.example_verb_var = tk.StringVar()
-        self.example_verb_combo = ttk.Combobox(
-            main_frame, textvariable=self.example_verb_var, values=[v["verb"] for v in self.EXAMPLE_VERBS], font=("Arial", 12), width=10
-        )
+        # Transform example verbs if GUI needs it
+        example_values = [format_text_gui(v["verb"]) for v in self.EXAMPLE_VERBS]
+        # Map displayed example string back to logical verb for selection handling
+        self._example_display_map = {display: logical["verb"] for display, logical in zip(example_values, self.EXAMPLE_VERBS)}
+        self.example_verb_combo = ttk.Combobox(main_frame, textvariable=self.example_verb_var, values=example_values, font=("Arial", 12), width=10)
         self.example_verb_combo.grid(row=0, column=3, padx=5)
         self.example_verb_combo.set("Examples")
         self.example_verb_combo.bind("<<ComboboxSelected>>", self.on_example_verb_select)
+
+        # Track whether the entry currently holds a reversed (display) string
+        self._entry_is_reversed = False
+        # Logical override for the entry when we display a transformed value (e.g., from examples)
+        self._entry_logical_value = None
+        # When user types, clear the logical override so entry value comes from the widget
+        self.root_entry.bind("<KeyRelease>", lambda e: setattr(self, "_entry_logical_value", None))
 
         tense_frame = ttk.Frame(main_frame)
         tense_frame.grid(row=1, column=0, columnspan=4, sticky=tk.W, pady=5)
         ttk.Label(
             tense_frame,
-            text="2. Select Tense:",
+            text=format_text_gui("2. Select Tense:"),
             font=(
                 "Arial",
                 12,
             ),
         ).pack(side=tk.LEFT)
-        ttk.Radiobutton(tense_frame, text="Past (الماضي)", variable=self.tense_var, value="Past", command=self.update_present_options).pack(
-            side=tk.LEFT, padx=5
-        )
-        ttk.Radiobutton(tense_frame, text="Present (المضارع)", variable=self.tense_var, value="Present", command=self.update_present_options).pack(
-            side=tk.LEFT, padx=5
-        )
+        ttk.Radiobutton(
+            tense_frame, text=format_text_gui("Past (الماضي)"), variable=self.tense_var, value="Past", command=self.update_present_options
+        ).pack(side=tk.LEFT, padx=5)
+        ttk.Radiobutton(
+            tense_frame,
+            text=format_text_gui("Present (المضارع)"),
+            variable=self.tense_var,
+            value="Present",
+            command=self.update_present_options,
+        ).pack(side=tk.LEFT, padx=5)
 
         self.present_frame = ttk.Frame(main_frame)
 
         ttk.Label(
             self.present_frame,
-            text="3a. Select Pattern (Bab):",
+            text=format_text_gui("3a. Select Pattern (Bab):"),
             font=(
                 "Arial",
                 12,
             ),
         ).grid(row=0, column=0, sticky=tk.W, pady=2, padx=5)
-        self.bab_combo = ttk.Combobox(
-            self.present_frame, textvariable=self.bab_var, values=list(self.BABS.keys()), font=("Arial", 11), state="readonly"
-        )
+        # Transform BABS keys if necessary
+        bab_values = [format_text_gui(k) for k in list(self.BABS.keys())]
+        self.bab_combo = ttk.Combobox(self.present_frame, textvariable=self.bab_var, values=bab_values, font=("Arial", 11), state="readonly")
         self.bab_combo.grid(row=0, column=1, columnspan=2, sticky=(tk.W, tk.E), padx=5)
 
         ttk.Label(
             self.present_frame,
-            text="3b. Select Mood:",
+            text=format_text_gui("3b. Select Mood:"),
             font=(
                 "Arial",
                 12,
@@ -169,11 +248,11 @@ class ArabicConjugatorApp:
         ).grid(row=1, column=0, sticky=tk.W, pady=2, padx=5)
         # Create radio buttons from the MOODS list so it's easy to add more options later
         for idx, (label, value) in enumerate(self.MOODS, start=1):
-            ttk.Radiobutton(self.present_frame, text=label, variable=self.mood_var, value=value).grid(row=idx, column=1, sticky=tk.W)
+            ttk.Radiobutton(self.present_frame, text=format_text_gui(label), variable=self.mood_var, value=value).grid(row=idx, column=1, sticky=tk.W)
 
         self.update_present_options()
 
-        self.conjugate_button = ttk.Button(main_frame, text="Conjugate Verb", command=self.calculate_conjugation, style="TButton")
+        self.conjugate_button = ttk.Button(main_frame, text=format_text_gui("Conjugate Verb"), command=self.calculate_conjugation, style="TButton")
         self.conjugate_button.grid(row=3, column=0, columnspan=4, pady=10)
 
         self.font_size_var = tk.StringVar(value="18")
@@ -187,21 +266,23 @@ class ArabicConjugatorApp:
 
         ttk.Label(
             controls_frame,
-            text="Conjugation Output:",
+            text=format_text_gui("Conjugation Output:"),
             font=(
                 "Arial",
                 12,
             ),
         ).pack(side=tk.LEFT)
 
-        ttk.Label(controls_frame, text="Font Size:").pack(side=tk.LEFT, padx=(10, 2))
+        ttk.Label(controls_frame, text=format_text_gui("Font Size:")).pack(side=tk.LEFT, padx=(10, 2))
         self.font_size_combo = ttk.Combobox(
             controls_frame, textvariable=self.font_size_var, values=[12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 48], width=4, state="readonly"
         )
         self.font_size_combo.pack(side=tk.LEFT)
         self.font_size_combo.bind("<<ComboboxSelected>>", self.update_font_size)
 
-        self.spacing_check = ttk.Checkbutton(controls_frame, text="Double Spacing", variable=self.double_spacing_var, command=self.redisplay_results)
+        self.spacing_check = ttk.Checkbutton(
+            controls_frame, text=format_text_gui("Double Spacing"), variable=self.double_spacing_var, command=self.redisplay_results
+        )
         self.spacing_check.pack(side=tk.LEFT, padx=10)
 
         self.output_text = scrolledtext.ScrolledText(
@@ -222,12 +303,24 @@ class ArabicConjugatorApp:
         if not selected_verb_str or selected_verb_str == "Examples":
             return
 
-        selected_verb_obj = next((item for item in self.EXAMPLE_VERBS if item["verb"] == selected_verb_str), None)
+        # If the combobox is showing transformed display values, map back to logical verb
+        logical = self._example_display_map.get(selected_verb_str)
+        if logical is None:
+            # Fallback: maybe combobox contains logical strings already
+            logical = selected_verb_str
 
-        if selected_verb_obj:
-            self.root_entry.delete(0, tk.END)
-            self.root_entry.insert(0, selected_verb_obj["verb"])
-            self.bab_var.set(selected_verb_obj["bab"])
+        # Remember logical verb separately so parsing gets the correct form
+        self._entry_logical_value = logical
+
+        # Show the display (possibly transformed) value in the entry widget
+        display_value = format_text_gui(logical)
+        self.root_entry.delete(0, tk.END)
+        self.root_entry.insert(0, display_value)
+
+        # Also set the bab selection if available
+        matched = next((item for item in self.EXAMPLE_VERBS if item["verb"] == logical), None)
+        if matched:
+            self.bab_var.set(matched["bab"])
 
     def update_present_options(self):
         """Shows or hides the Bab/Mood selectors based on the selected tense."""
@@ -253,7 +346,19 @@ class ArabicConjugatorApp:
         Parses the full Past Tense verb input to extract
         F, A, L letters and the harakat on F and A letters.
         """
-        raw_input = self.root_entry.get().strip()[::-1]
+        # If we inserted a logical override (from example selection), use it
+        if getattr(self, "_entry_logical_value", None):
+            raw = self._entry_logical_value
+        else:
+            raw = self.root_entry.get().strip()
+
+        # If GUI is displaying transformed text, and we got the display string from the widget,
+        # try to convert it back to logical by reversing (GUI shows visual ordering).
+        if should_reverse_gui_text() and not getattr(self, "_entry_logical_value", None):
+            # Reverse the characters to obtain the logical input for parsing
+            raw_input = raw[::-1]
+        else:
+            raw_input = raw[::-1]
 
         clean_input = "".join(c for c in raw_input if "\u0600" <= c <= "\u06ff" or c in self.HARAKAT)
         letters_only = "".join(c for c in clean_input if c not in self.HARAKAT)
@@ -430,7 +535,10 @@ class ArabicConjugatorApp:
         if not is_headless:
             # GUI output (only when running with the real GUI widgets)
             self.output_text.delete(1.0, tk.END)
-            self.output_text.insert(tk.END, f"\n{title}\n\n", "header")
+            # Decide whether GUI text needs reversing/reshaping based on environment
+            title_to_show = format_text_gui(title)
+
+            self.output_text.insert(tk.END, f"\n{title_to_show}\n\n", "header")
 
             # --- GUI Table ---
             gui_grouped_results = {}
@@ -456,15 +564,15 @@ class ArabicConjugatorApp:
 
             for pg in display_order:
                 row_data = gui_grouped_results.get(pg, {})
-                plural_form = row_data.get("Plural", "---")
-                dual_form = row_data.get("Dual", "---")
-                singular_form = row_data.get("Singular", "---")
+                plural_form = format_text_gui(row_data.get("Plural", "---"))
+                dual_form = format_text_gui(row_data.get("Dual", "---"))
+                singular_form = format_text_gui(row_data.get("Singular", "---"))
 
                 gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
 
             row_data_1st = gui_grouped_results.get("1st person", {})
-            plural_form = row_data_1st.get("Plural", "---")
-            singular_form = row_data_1st.get("Singular", "---")
+            plural_form = format_text_gui(row_data_1st.get("Plural", "---"))
+            singular_form = format_text_gui(row_data_1st.get("Singular", "---"))
 
             gui_table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
 
@@ -472,102 +580,79 @@ class ArabicConjugatorApp:
 
             self.output_text.insert(tk.END, gui_table_content)
 
-        # --- Terminal Table ---
-        if not actual_table:
-            try:
-                from arabic_reshaper import ArabicReshaper
-                from bidi.algorithm import get_display
 
-                # Configuration for the reshaper to keep harakat
-                configuration = {
-                    "delete_harakat": False,
-                    "shift_harakat_position": True,
-                }
-                reshaper = ArabicReshaper(configuration=configuration)
+            term_grouped_results = {}
+            for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, term_results):
+                if person_gender not in term_grouped_results:
+                    term_grouped_results[person_gender] = {}
+                if num in term_grouped_results[person_gender]:
+                    term_grouped_results[person_gender][num] += f", {verb}"
+                else:
+                    term_grouped_results[person_gender][num] = verb
 
-                term_grouped_results = {}
-                for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, term_results):
-                    if person_gender not in term_grouped_results:
-                        term_grouped_results[person_gender] = {}
-                    if num in term_grouped_results[person_gender]:
-                        term_grouped_results[person_gender][num] += f", {verb}"
-                    else:
-                        term_grouped_results[person_gender][num] = verb
+            term_table_content = ""
+            # Visualize title as well so harakat and RTL ordering show correctly in terminal
+            # Terminal: consult environment to see if we need to reshape/reverse
+            term_should_reverse = should_reverse_terminal_text()
 
-                term_table_content = ""
-                # Visualize title as well so harakat and RTL ordering show correctly in terminal
-                try:
-                    title_vis = get_display(reshaper.reshape(title))
-                except Exception:
-                    title_vis = title
+            title_vis = format_text_terminal(title)
 
-                term_table_content += f"{title_vis}\n"
-                term_table_content += "=" * 77 + "\n"
+            term_table_content += f"{title_vis}\n"
+            term_table_content += "=" * 77 + "\n"
 
-                display_order_term = ["3rd person male", "3rd person female", "2nd person male", "2nd person female", "1st person"]
+            display_order_term = ["3rd person male", "3rd person female", "2nd person male", "2nd person female", "1st person"]
 
-                header = "{0:^{p}} | {1:^{d}} | {2:^{s}} | {3:^{per}}\n".format(
-                    "Plural",
-                    "Dual",
-                    "Singular",
-                    "Person",
-                    p=16,
-                    d=13,
-                    s=21,
-                    per=16,
-                )
-                term_table_content += header
-                term_table_content += "-" * 77 + "\n"
+            header = "{0:^{p}} | {1:^{d}} | {2:^{s}} | {3:^{per}}\n".format(
+                "Plural",
+                "Dual",
+                "Singular",
+                "Person",
+                p=16,
+                d=13,
+                s=21,
+                per=16,
+            )
+            term_table_content += header
+            term_table_content += "-" * 77 + "\n"
 
-                # Helper to produce visual cell (reshape + bidi) when libraries are present
-                def make_visual(cell):
-                    if cell is None:
-                        return ""
-                    cell = str(cell)
-                    if cell == "---":
-                        return cell
-                    try:
-                        reshaped = reshaper.reshape(cell)
-                        visual = get_display(reshaped)
-                        return visual
-                    except Exception:
-                        # If reshaper/bidi fail for some reason, return the logical cell
-                        return cell
+            # Helper to produce visual cell (reshape + bidi) when libraries are present
+            def make_visual(cell):
+                if cell is None:
+                    return ""
+                cell = str(cell)
+                if cell == "---":
+                    return cell
 
-                for pg in display_order_term:
-                    row_data = term_grouped_results.get(pg, {})
-                    plural_form = row_data.get("Plural", "---")
-                    dual_form = row_data.get("Dual", "---")
-                    singular_form = row_data.get("Singular", "---")
-                    if pg == "1st person":
-                        dual_form = "-------"
+                # If terminal doesn't require reversal, return logical cell
+                if not term_should_reverse:
+                    return cell
 
-                    plural_vis = make_visual(plural_form)
-                    dual_vis = make_visual(dual_form)
-                    singular_vis = make_visual(singular_form)
-                    person_vis = make_visual(pg)
+                return format_text_terminal(cell)
 
-                    # Pad based on visual lengths so columns line up after bidi
-                    plural_col = plural_vis + "\t\t"
-                    dual_col = dual_vis + "   \t"
-                    singular_col = singular_vis + "  \t\t"
-                    person_col = person_vis
+            for pg in display_order_term:
+                row_data = term_grouped_results.get(pg, {})
+                plural_form = row_data.get("Plural", "---")
+                dual_form = row_data.get("Dual", "---")
+                singular_form = row_data.get("Singular", "---")
+                if pg == "1st person":
+                    dual_form = "-------"
 
-                    # Assemble row with ASCII separators (these stay in place)
-                    term_table_content += f"{plural_col} | {dual_col} | {singular_col} | {person_col}\n"
+                plural_vis = make_visual(plural_form)
+                dual_vis = make_visual(dual_form)
+                singular_vis = make_visual(singular_form)
+                person_vis = make_visual(pg)
 
-                term_table_content += "=" * 77 + "\n"
-                print(term_table_content)
+                # Pad based on visual lengths so columns line up after bidi
+                plural_col = plural_vis + "\t\t"
+                dual_col = dual_vis + "   \t"
+                singular_col = singular_vis + "  \t\t"
+                person_col = person_vis
 
-            except ImportError:
-                print("For correct terminal display, please install required libraries:")
-                print("pip3 install arabic_reshaper python-bidi")
+                # Assemble row with ASCII separators (these stay in place)
+                term_table_content += f"{plural_col} | {dual_col} | {singular_col} | {person_col}\n"
 
-                print("\n--- (GUI Table Output) ---\n")
-                # Fallback to printing the GUI content if libraries are not found
-                print(gui_table_content)
-        else:
-            print(gui_table_content)
+            term_table_content += "=" * 77 + "\n"
+            print(term_table_content)
 
 
 if __name__ == "__main__":
