@@ -1,5 +1,7 @@
 # Arabic Verb Conjugator
 
+>Also available on [replit.com/@hmolavi/ArabicConjugator](https://replit.com/@hmolavi/ArabicConjugator).
+
 A simple yet powerful desktop application for conjugating Arabic verbs. This tool is designed for learners and enthusiasts of the Arabic language to help them understand and practice verb conjugation. The application features a graphical user interface (GUI) built with Python's `tkinter` library.
 
 **I have not checked on Windows devices** so the spacing and output format may not be correct. Which is why I also built a terminal output, so you can input the verb with Harakat, hit the conjugate button and see the output (formatted by the arabic libraries) in the actual terminal.
@@ -7,8 +9,6 @@ A simple yet powerful desktop application for conjugating Arabic verbs. This too
 ## Demonstration
 
 <div align="center">
-
-![example1](/assets/example1.gif)
 
 ![example2](/assets/example2.gif)
 
