@@ -625,7 +625,7 @@ class ArabicConjugatorApp:
                 plural_vis = make_visual(plural_form)
                 dual_vis = make_visual(dual_form)
                 singular_vis = make_visual(singular_form)
-                person_vis = make_visual(pg)
+                person_vis = pg
 
                 # Pad based on visual lengths so columns line up after bidi
                 plural_col = plural_vis + "\t\t"
@@ -634,7 +634,7 @@ class ArabicConjugatorApp:
                 person_col = person_vis
 
                 # Assemble row with ASCII separators (these stay in place)
-                term_table_content += f"{plural_col} | {dual_col} | {singular_col} | {person_col}\n"
+                term_table_content += f"{plural_col} l {dual_col} l {singular_col} l {person_col} \n"
 
             term_table_content += "=" * 77 + "\n"
             print(term_table_content)
