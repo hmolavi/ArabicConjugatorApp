@@ -21,13 +21,9 @@ def should_reverse_terminal_text():
     # --- Check for modern macOS Terminals ---
     term_program = os.environ.get("TERM_PROGRAM")
     if term_program in ["Apple_Terminal", "iTerm.app"]:
-        print("mac W")
         return False
 
     # Default: assume terminal needs fix
-    print("-aaaa- Non-smart terminal detected. Environment variables:")
-    # for key, value in os.environ.items():
-    #     print(f"{key}: {value}")
     return True
 
 
