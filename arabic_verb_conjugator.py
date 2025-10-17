@@ -1,5 +1,16 @@
-import tkinter as tk
-from tkinter import ttk, scrolledtext
+import argparse
+import sys
+
+# Delay tkinter imports until GUI is actually needed so the script can run
+# in environments without tkinter (headless/CLI mode).
+try:
+    import tkinter as tk
+    from tkinter import ttk, scrolledtext
+except Exception:
+    # We'll only require tkinter if GUI mode is selected (no CLI args).
+    tk = None
+    ttk = None
+    scrolledtext = None
 
 # Print the actual GUI table in terminal or seperate formatted table specifically made for terminal
 actual_table = False
@@ -414,48 +425,52 @@ class ArabicConjugatorApp:
 
     def _display_results(self, title, gui_results, term_results):
         """Formats and displays the 14 conjugations in the required table format."""
-        self.output_text.delete(1.0, tk.END)
-        self.output_text.insert(tk.END, f"\n{title}\n\n", "header")
+        is_headless = getattr(self, "headless", False)
 
-        # --- GUI Table ---
-        gui_grouped_results = {}
-        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, gui_results):
-            if person_gender not in gui_grouped_results:
-                gui_grouped_results[person_gender] = {}
-            if num in gui_grouped_results[person_gender]:
-                gui_grouped_results[person_gender][num] += f"\n{verb}"
-            else:
-                gui_grouped_results[person_gender][num] = verb
+        if not is_headless:
+            # GUI output (only when running with the real GUI widgets)
+            self.output_text.delete(1.0, tk.END)
+            self.output_text.insert(tk.END, f"\n{title}\n\n", "header")
 
-        display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
+            # --- GUI Table ---
+            gui_grouped_results = {}
+            for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, gui_results):
+                if person_gender not in gui_grouped_results:
+                    gui_grouped_results[person_gender] = {}
+                if num in gui_grouped_results[person_gender]:
+                    gui_grouped_results[person_gender][num] += f"\n{verb}"
+                else:
+                    gui_grouped_results[person_gender][num] = verb
 
-        row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
-        gui_table_content = ""
-        separator = "—" * 24 + "\n"
+            display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
 
-        header = f"| Plural\t| Dual\t| Singular\t|\t\t|\n"
+            row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
+            gui_table_content = ""
+            separator = "—" * 24 + "\n"
 
-        gui_table_content += separator
-        gui_table_content += header
-        gui_table_content += separator
+            header = f"| Plural\t| Dual\t| Singular\t|\t\t|\n"
 
-        for pg in display_order:
-            row_data = gui_grouped_results.get(pg, {})
-            plural_form = row_data.get("Plural", "---")
-            dual_form = row_data.get("Dual", "---")
-            singular_form = row_data.get("Singular", "---")
+            gui_table_content += separator
+            gui_table_content += header
+            gui_table_content += separator
 
-            gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
+            for pg in display_order:
+                row_data = gui_grouped_results.get(pg, {})
+                plural_form = row_data.get("Plural", "---")
+                dual_form = row_data.get("Dual", "---")
+                singular_form = row_data.get("Singular", "---")
 
-        row_data_1st = gui_grouped_results.get("1st person", {})
-        plural_form = row_data_1st.get("Plural", "---")
-        singular_form = row_data_1st.get("Singular", "---")
+                gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
 
-        gui_table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
+            row_data_1st = gui_grouped_results.get("1st person", {})
+            plural_form = row_data_1st.get("Plural", "---")
+            singular_form = row_data_1st.get("Singular", "---")
 
-        gui_table_content += separator
+            gui_table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
 
-        self.output_text.insert(tk.END, gui_table_content)
+            gui_table_content += separator
+
+            self.output_text.insert(tk.END, gui_table_content)
 
         # --- Terminal Table ---
         if not actual_table:
@@ -556,6 +571,150 @@ class ArabicConjugatorApp:
 
 
 if __name__ == "__main__":
+    # --- CLI handling ---
+    parser = argparse.ArgumentParser(description="Arabic Verb Conjugator - CLI mode")
+    parser.add_argument("--verb", dest="verb", help="Past tense verb (3 letters with harakat), e.g., ذَهَبَ")
+    parser.add_argument("--tense", dest="tense", choices=["past", "present"], default="past", help="Tense: past or present (default: past)")
+    parser.add_argument(
+        "--bab",
+        dest="bab",
+        choices=["f_f", "f_d", "f_k", "k_f", "d_d", "k_k"],
+        default="f_f",
+        help="Present pattern (bab) shorthand: f_f, f_d, f_k, k_f, d_d, k_k (default: f_f)",
+    )
+    parser.add_argument(
+        "--mood",
+        dest="mood",
+        choices=["indicative", "i", "subjunctive", "s"],
+        default="indicative",
+        help="Mood for present tense: indicative (i) or subjunctive (s). Default: indicative",
+    )
+
+    args = parser.parse_args()
+
+    # If any CLI arg was provided (other than defaults) or verb is provided, run CLI-only mode.
+    cli_mode = any([args.verb, len(sys.argv) > 1])
+
+    if cli_mode:
+        # Map bab shorthand to internal BABS keys
+        bab_map = {
+            "f_f": "Fatha/Fatha (فَتَحَ / يَفْتَحُ)",
+            "f_d": "Fatha/Damma (نَصَرَ / يَنْصُرُ)",
+            "f_k": "Fatha/Kasra (ضَرَبَ / يَضْرِبُ)",
+            "k_f": "Kasra/Fatha (سَمِعَ / يَسْمَعُ)",
+            "d_d": "Damma/Damma (كَرُمَ / يَكْرُمُ)",
+            "k_k": "Kasra/Kasra (حَسِبَ / يَحْسِبُ)",
+        }
+
+        mood_map = {
+            "indicative": "Indicative (مرفوع)",
+            "i": "Indicative (مرفوع)",
+            "subjunctive": "Subjunctive (منصوب)",
+            "s": "Subjunctive (منصوب)",
+        }
+
+        # Create a minimal headless app instance without initializing tkinter widgets.
+        # We'll instantiate ArabicConjugatorApp but bypass GUI setup by creating a dummy master
+        class _HeadlessApp(ArabicConjugatorApp):
+            def __init__(self):
+                # Do not call super().__init__ to avoid GUI initialization
+                # Instead, initialize only the attributes used by conjugation logic
+                # Copy constants from parent class
+                for k, v in ArabicConjugatorApp.__dict__.items():
+                    if k.isupper():
+                        setattr(self, k, v)
+
+                # Minimal attributes used by parsing/conjugation/display
+                self.last_results = None
+                self.last_term_results = None
+                self.last_title = ""
+                self.double_spacing_var = type("X", (), {"get": lambda self: False})()
+                # Mark as headless so display method knows to skip GUI inserts
+                self.headless = True
+
+            # Provide dummy methods expected by the class but not needed in CLI
+            def display_error(self, message):
+                print(message)
+
+            # Override _display_results to reuse existing function body but avoid GUI widgets.
+            # We'll call the original _display_results which mostly prints to terminal.
+            pass
+
+        app = _HeadlessApp()
+
+        # If verb not provided, show usage and exit
+        if not args.verb:
+            parser.print_help()
+            sys.exit(1)
+
+        # Prepare inputs
+        verb_input = args.verb
+        tense = args.tense.lower()
+
+        # parse_root expects the entry widget; monkeypatch root_entry.get to return the verb
+        class DummyEntry:
+            def __init__(self, v):
+                self._v = v
+
+            def get(self):
+                return self._v
+
+        app.root_entry = DummyEntry(verb_input)
+
+        if tense == "past":
+            # Call parse_root and conjugate past
+            parsed = app.parse_root()
+            if not parsed or not parsed[0]:
+                sys.exit(1)
+            L, A, F, hA, hF = parsed
+            gui_results = app._conjugate_past(F, A, L, hF, hA)
+            term_results = gui_results
+            title = f"الماضي ({F}{hF}{A}{hA}{L}{app.FATHA})"
+        else:
+            # Present
+            bab_key = bab_map.get(args.bab, list(ArabicConjugatorApp.BABS.keys())[0])
+            mood = mood_map.get(args.mood, "Indicative (مرفوع)")
+            parsed = app.parse_root()
+            if not parsed or not parsed[0]:
+                sys.exit(1)
+            L, A, F, hA, hF = parsed
+            _, present_ayn_haraka = ArabicConjugatorApp.BABS[bab_key]
+            gui_results = app._conjugate_present(F, A, L, present_ayn_haraka, mood)
+            term_results = gui_results
+            title = f"المضارع - {mood} ({bab_key})"
+
+        # Reuse existing terminal print logic in _display_results by calling it.
+        # But _display_results uses self.output_text which doesn't exist in headless mode.
+        # Instead, call the terminal-only portion of that code by temporarily setting
+        # attributes it expects.
+
+        # Attach minimal attributes used by _display_results
+        app.PRONOUNS = ArabicConjugatorApp.PRONOUNS
+
+        class DummyText:
+            def delete(self, a, b=None):
+                return
+
+            def insert(self, index, text, tag=None):
+                # Print header and GUI table content to stdout as fallback
+                print(text, end="")
+
+            def tag_configure(self, *args, **kwargs):
+                return
+
+        app.output_text = DummyText()
+        app._display_results(title, gui_results, term_results)
+
+        sys.exit(0)
+
+    # No CLI args -> GUI mode required
+    if tk is None:
+        print("Tkinter is not available. To use GUI mode, please install tkinter or run with CLI arguments.\n")
+        parser = argparse.ArgumentParser(add_help=False)
+        parser.add_argument("--help", action="help", help=argparse.SUPPRESS)
+        print('Example CLI usage:\n  python3 arabic_verb_conjugator.py --verb "ذَهَبَ" --tense past')
+        sys.exit(1)
+
     root = tk.Tk()
     app = ArabicConjugatorApp(root)
     root.mainloop()
