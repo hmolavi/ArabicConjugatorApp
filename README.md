@@ -10,8 +10,6 @@ A simple yet powerful desktop application for conjugating Arabic verbs. This too
 
 <div align="center">
 
-![example1](/assets/example1.gif)
-
 ![example2](/assets/example2.gif)
 
 </div>
