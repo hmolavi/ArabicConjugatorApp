@@ -5,6 +5,9 @@ import platform
 from arabic_reshaper import ArabicReshaper
 from bidi.algorithm import get_display
 
+# Module-level override: when None, use heuristics; when True/False, force terminal reversal behavior
+FORCE_REVERSE_TERMINAL = None
+
 
 def should_reverse_terminal_text():
     """
@@ -14,6 +17,10 @@ def should_reverse_terminal_text():
         bool: True if the terminal is "dumb" and requires a fix (e.g., VS Code, legacy Windows cmd).
               False if the terminal is "smart" and handles Arabic correctly (e.g., macOS Terminal, Windows Terminal).
     """
+    # If the CLI/user asked to force a behavior, honor that first
+    if FORCE_REVERSE_TERMINAL is not None:
+        return bool(FORCE_REVERSE_TERMINAL)
+
     # --- Check for modern Windows Terminal ---
     if os.environ.get("WT_SESSION"):
         return False
@@ -698,6 +705,19 @@ Notes:
         default="indicative",
         help="Mood for present tense: indicative (i) or subjunctive (s). Default: indicative",
     )
+    # Allow user to force terminal reversal behavior from CLI
+    parser.add_argument(
+        "--force-reverse-terminal",
+        dest="force_reverse_terminal",
+        action="store_true",
+        help="Force terminal-style reversal/reshaping for Arabic output",
+    )
+    parser.add_argument(
+        "--no-reverse-terminal",
+        dest="no_reverse_terminal",
+        action="store_true",
+        help="Force no terminal reversal/reshaping for Arabic output",
+    )
 
     args = parser.parse_args()
 
@@ -748,6 +768,12 @@ Notes:
             # Override _display_results to reuse existing function body but avoid GUI widgets.
             # We'll call the original _display_results which mostly prints to terminal.
             pass
+
+        # Respect CLI override for terminal reversal when creating headless app
+        if args.force_reverse_terminal:
+            globals()["FORCE_REVERSE_TERMINAL"] = True
+        elif args.no_reverse_terminal:
+            globals()["FORCE_REVERSE_TERMINAL"] = False
 
         app = _HeadlessApp()
 
