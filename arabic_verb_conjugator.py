@@ -594,7 +594,7 @@ class ArabicConjugatorApp:
                 "Person",
                 p=16,
                 d=13,
-                s=21,
+                s=13,
                 per=16,
             )
             term_table_content += header
@@ -620,21 +620,30 @@ class ArabicConjugatorApp:
                 dual_form = row_data.get("Dual", "---")
                 singular_form = row_data.get("Singular", "---")
                 if pg == "1st person":
-                    dual_form = "-------"
+                    dual_form = "------"
 
                 plural_vis = make_visual(plural_form)
                 dual_vis = make_visual(dual_form)
                 singular_vis = make_visual(singular_form)
                 person_vis = pg
 
+                extra = ""
+                if not should_reverse_gui_text():
+                    extra = " "
+
                 # Pad based on visual lengths so columns line up after bidi
                 plural_col = plural_vis + "\t\t"
-                dual_col = dual_vis + "   \t"
-                singular_col = singular_vis + "  \t\t"
+                dual_col = dual_vis + extra + "  \t"
+                singular_col = singular_vis + "  \t"
                 person_col = person_vis
 
+                if not should_reverse_gui_text():
+                    extra = ""
+                else:
+                    extra = "\t"
+
                 # Assemble row with ASCII separators (these stay in place)
-                term_table_content += f"{plural_col} l {dual_col} l {singular_col} l {person_col} \n"
+                term_table_content += f"{extra}{plural_col} l {dual_col}{extra} l {singular_col}{extra} l {person_col} \n"
 
             term_table_content += "=" * 77 + "\n"
             print(term_table_content)
