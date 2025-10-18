@@ -7,6 +7,8 @@ from bidi.algorithm import get_display
 
 # Module-level override: when None, use heuristics; when True/False, force terminal reversal behavior
 FORCE_REVERSE_TERMINAL = None
+# Module-level override for GUI reversal: None => use heuristics, True/False => force behavior
+FORCE_REVERSE_GUI = None
 
 
 def should_reverse_terminal_text():
@@ -42,6 +44,9 @@ def should_reverse_gui_text():
         bool: True if the OS is likely a minimal environment (like Linux on Replit)
               that requires a fix. False otherwise.
     """
+    # CLI/GUI override takes precedence when set
+    if "FORCE_REVERSE_GUI" in globals() and globals().get("FORCE_REVERSE_GUI") is not None:
+        return bool(globals().get("FORCE_REVERSE_GUI"))
     return platform.system() == "Linux"
 
 
@@ -91,13 +96,13 @@ class ArabicConjugatorApp:
     DAMMA = "\u064f"  # یُ
     KASRA = "\u0650"  # یِ
     SUKUN = "\u0652"  # یْ
-    SHADDA = "\u0651" # یّ
-    ALEF = "\u0627"   # ا
-    WAW = "\u0648"    # و
-    YAA = "\u064a"    # ي
-    NOON = "\u0646"   # ن
-    TAA = "\u062a"    # ت
-    MEEM = "\u0645"   # م
+    SHADDA = "\u0651"  # یّ
+    ALEF = "\u0627"  # ا
+    WAW = "\u0648"  # و
+    YAA = "\u064a"  # ي
+    NOON = "\u0646"  # ن
+    TAA = "\u062a"  # ت
+    MEEM = "\u0645"  # م
     ALEF_MAKSURA = "\u0649"  # ى
 
     # List of valid harakat used in parsing
@@ -263,6 +268,7 @@ class ArabicConjugatorApp:
         controls_frame = ttk.Frame(main_frame)
         controls_frame.grid(row=4, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
 
+        # Conjugation Output label and a small toggle icon/button to force GUI reversal
         ttk.Label(
             controls_frame,
             text=format_text_gui("Conjugation Output:"),
@@ -271,6 +277,16 @@ class ArabicConjugatorApp:
                 12,
             ),
         ).pack(side=tk.LEFT)
+
+        # Toggle button for GUI reversal (shows current state via text)
+        self.gui_reverse_var = tk.BooleanVar(value=should_reverse_gui_text())
+        self.gui_reverse_button = ttk.Button(
+            controls_frame,
+            text=("⬅️" if self.gui_reverse_var.get() else "➡️"),
+            width=3,
+            command=self.toggle_gui_reverse,
+        )
+        self.gui_reverse_button.pack(side=tk.RIGHT, padx=(6, 8))
 
         ttk.Label(controls_frame, text=format_text_gui("Font Size:")).pack(side=tk.LEFT, padx=(10, 2))
         self.font_size_combo = ttk.Combobox(
@@ -317,6 +333,54 @@ class ArabicConjugatorApp:
         matched = next((item for item in self.EXAMPLE_VERBS if item["verb"] == logical), None)
         if matched:
             self.bab_var.set(matched["bab"])
+
+    def _apply_gui_formatting(self):
+        """Apply GUI formatting to labels, buttons and combobox display values according to should_reverse_gui_text()."""
+        # Update example combobox display values
+        try:
+            example_values = [format_text_gui(v["verb"]) for v in self.EXAMPLE_VERBS]
+            self.example_verb_combo.configure(values=example_values)
+            # Rebuild display->logical map
+            self._example_display_map = {display: logical["verb"] for display, logical in zip(example_values, self.EXAMPLE_VERBS)}
+        except Exception:
+            pass
+
+        # Update bab combobox display values
+        try:
+            bab_values = [format_text_gui(k) for k in list(self.BABS.keys())]
+            self.bab_combo.configure(values=bab_values)
+        except Exception:
+            pass
+
+        # Update static labels and buttons that were created earlier - easiest is to update the Conjugation Output label text
+        # (Other labels are already formatted during creation.)
+        try:
+            # Update the GUI reverse button text to reflect current state
+            self.gui_reverse_var.set(should_reverse_gui_text())
+            self.gui_reverse_button.configure(text=("⬅️" if self.gui_reverse_var.get() else "➡️"))
+        except Exception:
+            pass
+
+        # Re-render the last results if present
+        self.redisplay_results()
+
+    def toggle_gui_reverse(self):
+        """Toggle the GUI reversal override and refresh display.
+
+        This flips the FORCE_REVERSE_GUI module-level override and reapplies GUI formatting.
+        """
+        current = bool(globals().get("FORCE_REVERSE_GUI")) if globals().get("FORCE_REVERSE_GUI") is not None else None
+        # Flip: if None or False => True; if True => False
+        new = not current if isinstance(current, bool) else True
+        globals()["FORCE_REVERSE_GUI"] = new
+        # Update button visual
+        try:
+            self.gui_reverse_var.set(should_reverse_gui_text())
+            self.gui_reverse_button.configure(text=("⬅️" if self.gui_reverse_var.get() else "➡️"))
+        except Exception:
+            pass
+        # Apply formatting changes
+        self._apply_gui_formatting()
 
     def update_present_options(self):
         """Shows or hides the Bab/Mood selectors based on the selected tense."""
@@ -428,20 +492,20 @@ class ArabicConjugatorApp:
         base_a = f"{F}{hF}{A}{hA}{L}"
         base_b = f"{F}{hF}{A}{self.FATHA}{L}{self.SUKUN}"
         forms = [
-            f"{base_a}{self.FATHA}",                                               # 1
-            f"{base_a}{self.FATHA}{self.ALEF}",                                    # 2
-            f"{base_a}{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",              # 3
-            f"{base_a}{self.FATHA}{self.TAA}{self.SUKUN}",                         # 4
-            f"{base_a}{self.FATHA}{self.TAA}{self.ALEF}{self.FATHA}",              # 5
-            f"{base_b}{self.NOON}{self.FATHA}",                                    # 6
-            f"{base_b}{self.TAA}{self.FATHA}",                                     # 7
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",   # 8
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.SUKUN}",              # 9
-            f"{base_b}{self.TAA}{self.KASRA}",                                     # 10
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",   # 11
-            f"{base_b}{self.TAA}{self.DAMMA}{self.NOON}{self.SHADDA}{self.FATHA}", # 12
-            f"{base_b}{self.TAA}{self.DAMMA}",                                     # 13
-            f"{base_b}{self.NOON}{self.ALEF}",                                     # 14
+            f"{base_a}{self.FATHA}",  # 1
+            f"{base_a}{self.FATHA}{self.ALEF}",  # 2
+            f"{base_a}{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",  # 3
+            f"{base_a}{self.FATHA}{self.TAA}{self.SUKUN}",  # 4
+            f"{base_a}{self.FATHA}{self.TAA}{self.ALEF}{self.FATHA}",  # 5
+            f"{base_b}{self.NOON}{self.FATHA}",  # 6
+            f"{base_b}{self.TAA}{self.FATHA}",  # 7
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",  # 8
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.SUKUN}",  # 9
+            f"{base_b}{self.TAA}{self.KASRA}",  # 10
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",  # 11
+            f"{base_b}{self.TAA}{self.DAMMA}{self.NOON}{self.SHADDA}{self.FATHA}",  # 12
+            f"{base_b}{self.TAA}{self.DAMMA}",  # 13
+            f"{base_b}{self.NOON}{self.ALEF}",  # 14
         ]
         return forms
 
