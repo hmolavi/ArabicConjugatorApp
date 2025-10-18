@@ -682,11 +682,18 @@ class ArabicConjugatorApp:
 
         display_order = ["3rd person male", "3rd person female", "2nd person male", "2nd person female"]
 
-        row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
-        gui_table_content = ""
-        separator = "—" * 24 + "\n"
+        seperator_len = 24
+        that_many_spaces = "\t\t"
+        if should_reverse_gui_text():
+            that_many_spaces += "\t"
+            seperator_len += 6
 
-        header = f"| Plural\t| Dual\t| Singular\t|\t\t|\n"
+        row_ending = "\n\n" if self.double_spacing_var.get() else "\n"
+
+        gui_table_content = ""
+        separator = "—" * seperator_len + "\n"
+
+        header = f"| Plural\t| Dual\t| Singular\t|{that_many_spaces}|\n"
 
         gui_table_content += separator
         gui_table_content += header
@@ -698,13 +705,14 @@ class ArabicConjugatorApp:
             dual_form = format_text_gui(row_data.get("Dual", "---"))
             singular_form = format_text_gui(row_data.get("Singular", "---"))
 
-            gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}\t\tl{row_ending}"
+
+            gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}{that_many_spaces}l{row_ending}"
 
         row_data_1st = gui_grouped_results.get("1st person", {})
         plural_form = format_text_gui(row_data_1st.get("Plural", "---"))
         singular_form = format_text_gui(row_data_1st.get("Singular", "---"))
 
-        gui_table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person\t\tl{row_ending}"
+        gui_table_content += f"l\t {plural_form}\tl {singular_form}\tl 1st person{that_many_spaces}l{row_ending}"
 
         gui_table_content += separator
 
