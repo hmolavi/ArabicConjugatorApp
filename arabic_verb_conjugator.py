@@ -492,20 +492,20 @@ class ArabicConjugatorApp:
         base_a = f"{F}{hF}{A}{hA}{L}"
         base_b = f"{F}{hF}{A}{self.FATHA}{L}{self.SUKUN}"
         forms = [
-            f"{base_a}{self.FATHA}",  # 1
-            f"{base_a}{self.FATHA}{self.ALEF}",  # 2
-            f"{base_a}{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",  # 3
-            f"{base_a}{self.FATHA}{self.TAA}{self.SUKUN}",  # 4
-            f"{base_a}{self.FATHA}{self.TAA}{self.ALEF}{self.FATHA}",  # 5
-            f"{base_b}{self.NOON}{self.FATHA}",  # 6
-            f"{base_b}{self.TAA}{self.FATHA}",  # 7
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",  # 8
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.SUKUN}",  # 9
-            f"{base_b}{self.TAA}{self.KASRA}",  # 10
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",  # 11
-            f"{base_b}{self.TAA}{self.DAMMA}{self.NOON}{self.SHADDA}{self.FATHA}",  # 12
-            f"{base_b}{self.TAA}{self.DAMMA}",  # 13
-            f"{base_b}{self.NOON}{self.ALEF}",  # 14
+            f"{base_a}{self.FATHA}",
+            f"{base_a}{self.FATHA}{self.ALEF}",
+            f"{base_a}{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",
+            f"{base_a}{self.FATHA}{self.TAA}{self.SUKUN}",
+            f"{base_a}{self.FATHA}{self.TAA}{self.ALEF}{self.FATHA}",
+            f"{base_b}{self.NOON}{self.FATHA}",
+            f"{base_b}{self.TAA}{self.FATHA}",
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.SUKUN}",
+            f"{base_b}{self.TAA}{self.KASRA}",
+            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",
+            f"{base_b}{self.TAA}{self.DAMMA}{self.NOON}{self.SHADDA}{self.FATHA}",
+            f"{base_b}{self.TAA}{self.DAMMA}",
+            f"{base_b}{self.NOON}{self.ALEF}",
         ]
         return forms
 
