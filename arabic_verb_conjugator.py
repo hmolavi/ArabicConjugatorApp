@@ -152,8 +152,7 @@ class ArabicConjugatorApp:
     MOODS = [
         ("Indicative (مرفوع)", "Indicative (مرفوع)"),
         ("Subjunctive (منصوب)", "Subjunctive (منصوب)"),
-        # ================= Under development =================
-        # ("Jussive (مجزوم)", "Jussive (مجزوم)"),
+        ("Jussive (مجزوم)", "Jussive (مجزوم)"),
     ]
 
     def __init__(self, master):
@@ -564,17 +563,17 @@ class ArabicConjugatorApp:
             ],
             "Jussive (مجزوم)": [
                 self.SUKUN,
-                f"{self.KASRA}{self.ALEF}",
-                f"{self.DAMMA}{self.WAW}{self.ALEF}",
+                f"{self.FATHA}{self.ALEF}",
+                f"{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",
                 self.SUKUN,
-                f"{self.KASRA}{self.ALEF}",
-                f"{self.FATHA}{self.NOON}{self.FATHA}",
+                f"{self.FATHA}{self.ALEF}",
+                f"{self.SUKUN}{self.NOON}{self.FATHA}",
                 self.SUKUN,
-                f"{self.KASRA}{self.ALEF}",
-                f"{self.DAMMA}{self.WAW}{self.ALEF}",
+                f"{self.FATHA}{self.ALEF}",
+                f"{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",
                 f"{self.KASRA}{self.YAA}",
-                f"{self.KASRA}{self.ALEF}",
-                f"{self.FATHA}{self.NOON}{self.FATHA}",
+                f"{self.FATHA}{self.ALEF}",
+                f"{self.SUKUN}{self.NOON}{self.FATHA}",
                 self.SUKUN,
                 self.SUKUN,
             ],
