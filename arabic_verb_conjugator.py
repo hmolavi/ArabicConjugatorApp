@@ -152,6 +152,7 @@ class ArabicConjugatorApp:
     MOODS = [
         ("Indicative (مرفوع)", "Indicative (مرفوع)"),
         ("Subjunctive (منصوب)", "Subjunctive (منصوب)"),
+        ("Imperative (أمر)", "Imperative (أمر)"),
         ("Jussive (مجزوم)", "Jussive (مجزوم)"),
     ]
 
@@ -578,6 +579,22 @@ class ArabicConjugatorApp:
                 self.SUKUN,
             ],
         }
+
+        # Handle Imperative mood specially: only 2nd person forms are meaningful.
+        # For other persons (3rd and 1st), return placeholders "----".
+        if mood == "Imperative (أمر)":
+            jussive_suffixes = mood_rules["Jussive (مجزوم)"]
+            imperative_forms = []
+            for i in range(14):
+                # 2nd person indices are 6..11 (0-based)
+                if 6 <= i <= 11:
+                    # Build an imperative-like form by using the stem (no present prefix)
+                    # and appending the jussive suffix for that person.
+                    imperative_forms.append(f"{self.ALEF}{self.KASRA}{stem}{jussive_suffixes[i]}")
+                else:
+                    imperative_forms.append("----")
+            return imperative_forms
+
         current_suffixes = mood_rules[mood]
         forms = [f"{prefixes[i]}{self.FATHA}{stem}{current_suffixes[i]}" for i in range(14)]
         return forms
@@ -781,9 +798,9 @@ Notes:
     parser.add_argument(
         "--mood",
         dest="mood",
-        choices=["indicative", "i", "subjunctive", "s"],
+        choices=["indicative", "i", "subjunctive", "s", "imperative", "imp"],
         default="indicative",
-        help="Mood for present tense: indicative (i) or subjunctive (s). Default: indicative",
+        help="Mood for present tense: indicative (i), subjunctive (s), or imperative (imp). Default: indicative",
     )
     # Allow user to force terminal reversal behavior from CLI
     parser.add_argument(
@@ -820,6 +837,8 @@ Notes:
             "i": "Indicative (مرفوع)",
             "subjunctive": "Subjunctive (منصوب)",
             "s": "Subjunctive (منصوب)",
+            "imperative": "Imperative (أمر)",
+            "imp": "Imperative (أمر)",
         }
 
         # Create a minimal headless app instance without initializing tkinter widgets.
