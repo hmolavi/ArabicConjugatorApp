@@ -590,7 +590,7 @@ class ArabicConjugatorApp:
                 if 6 <= i <= 11:
                     # Build an imperative-like form by using the stem (no present prefix)
                     # and appending the jussive suffix for that person.
-                    imperative_forms.append(f"{self.ALEF}{self.KASRA}{stem}{jussive_suffixes[i]}")
+                    imperative_forms.append(f"{self.ALEF}{hA}{stem}{jussive_suffixes[i]}")
                 else:
                     imperative_forms.append("----")
             return imperative_forms
