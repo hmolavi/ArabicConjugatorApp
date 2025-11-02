@@ -721,7 +721,6 @@ class ArabicConjugatorApp:
             dual_form = format_text_gui(row_data.get("Dual", "---"))
             singular_form = format_text_gui(row_data.get("Singular", "---"))
 
-
             gui_table_content += f"l {plural_form}\tl {dual_form}\tl {singular_form}\tl {pg}{that_many_spaces}l{row_ending}"
 
         row_data_1st = gui_grouped_results.get("1st person", {})
@@ -798,9 +797,9 @@ Notes:
     parser.add_argument(
         "--mood",
         dest="mood",
-        choices=["indicative", "i", "subjunctive", "s", "imperative", "imp"],
+        choices=["indicative", "i", "subjunctive", "s", "imperative", "imp", "jussive", "j"],
         default="indicative",
-        help="Mood for present tense: indicative (i), subjunctive (s), or imperative (imp). Default: indicative",
+        help="Mood for present tense: indicative (i), subjunctive (s), imperative (imp), or jussive (j). Default: indicative",
     )
     # Allow user to force terminal reversal behavior from CLI
     parser.add_argument(
@@ -839,6 +838,8 @@ Notes:
             "s": "Subjunctive (منصوب)",
             "imperative": "Imperative (أمر)",
             "imp": "Imperative (أمر)",
+            "jussive": "Jussive (مجزوم)",
+            "j": "Jussive (مجزوم)",
         }
 
         # Create a minimal headless app instance without initializing tkinter widgets.
