@@ -4,6 +4,7 @@ import os
 import platform
 from arabic_reshaper import ArabicReshaper
 from bidi.algorithm import get_display
+import arabic_conjugation as ac
 
 # Module-level override: when None, use heuristics; when True/False, force terminal reversal behavior
 FORCE_REVERSE_TERMINAL = None
@@ -96,17 +97,6 @@ class ArabicConjugatorApp:
     DAMMA = "\u064f"  # یُ
     KASRA = "\u0650"  # یِ
     SUKUN = "\u0652"  # یْ
-    SHADDA = "\u0651"  # یّ
-    ALEF = "\u0627"  # ا
-    WAW = "\u0648"  # و
-    YAA = "\u064a"  # ي
-    NOON = "\u0646"  # ن
-    TAA = "\u062a"  # ت
-    MEEM = "\u0645"  # م
-    ALEF_MAKSURA = "\u0649"  # ى
-
-    # List of valid harakat used in parsing
-    HARAKAT = [FATHA, DAMMA, KASRA, SUKUN]
 
     # The 14 pronouns/forms
     PRONOUNS = [
@@ -402,56 +392,19 @@ class ArabicConjugatorApp:
             self._display_results(self.last_title, self.last_results, self.last_term_results)
 
     def parse_root(self):
-        """
-        Parses the full Past Tense verb input to extract
-        F, A, L letters and the harakat on F and A letters.
-        """
-        # If we inserted a logical override (from example selection), use it
         if getattr(self, "_entry_logical_value", None):
             raw = self._entry_logical_value
         else:
             raw = self.root_entry.get().strip()
 
-        # If GUI is displaying transformed text, and we got the display string from the widget,
-        # try to convert it back to logical by reversing (GUI shows visual ordering).
-        if should_reverse_gui_text() and not getattr(self, "_entry_logical_value", None):
-            # Reverse the characters to obtain the logical input for parsing
-            raw_input = raw[::-1]
-        else:
-            raw_input = raw[::-1]
-
-        clean_input = "".join(c for c in raw_input if "\u0600" <= c <= "\u06ff" or c in self.HARAKAT)
-        letters_only = "".join(c for c in clean_input if c not in self.HARAKAT)
-
-        if len(letters_only) < 3:
-            self.display_error("Input Error: Please enter a three-letter verb with harakat (e.g., ذَهَبَ).")
-            return None, None, None, None, None
-
-        F, A, L = letters_only[0], letters_only[1], letters_only[2]
-
-        hF, hA = None, None
+        # Decide whether input is in visual/display order and needs reversing before parsing
+        reverse_input = should_reverse_gui_text() and not getattr(self, "_entry_logical_value", None)
         try:
-
-            def find_haraka(letter, start_index):
-                idx = clean_input.find(letter, start_index)
-                if idx != -1 and len(clean_input) > idx + 1 and clean_input[idx + 1] in self.HARAKAT:
-                    return clean_input[idx + 1], idx
-                return None, -1
-
-            hF, idx_F = find_haraka(F, 0)
-            if idx_F != -1:
-                hA, _ = find_haraka(A, idx_F + 1)
-
-            if hF is None:
-                hF = self.FATHA
-            if hA is None:
-                self.display_error("Input Error: Could not detect the Haraka on the second root letter.")
-                return None, None, None, None, None
+            return ac.parse_root(raw, reverse=reverse_input)
         except Exception as e:
-            self.display_error(f"Parsing error: {e}")
+            # Surface parsing errors to the GUI
+            self.display_error(f"Input Error: {e}")
             return None, None, None, None, None
-
-        return F, A, L, hF, hA
 
     def display_error(self, message):
         """Displays an error message in the output area."""
@@ -465,147 +418,30 @@ class ArabicConjugatorApp:
         if not parsed_values or not parsed_values[0]:
             return
 
-        # Dont question it, getting the results in reverse just works....
-        L, A, F, hA, hF = parsed_values
-
         tense = self.tense_var.get()
-        past_lam_haraka = self.FATHA
+
+        reverse_input = should_reverse_gui_text() and not getattr(self, "_entry_logical_value", None)
 
         if tense == "Past":
-            gui_results = self._conjugate_past(F, A, L, hF, hA)
-            term_results = gui_results
-            title = f"الماضي ({F}{hF}{A}{hA}{L}{past_lam_haraka})"
+            title, results = ac.conjugate_verb(self.root_entry.get().strip(), tense="past", reverse_input=reverse_input)
         else:
             mood = self.mood_var.get()
             selected_bab_key = self.bab_var.get()
-            _, present_ayn_haraka = self.BABS[selected_bab_key]
-            gui_results = self._conjugate_present(F, A, L, present_ayn_haraka, mood)
-            term_results = gui_results
-            title = f"المضارع - {mood} ({selected_bab_key})"
+            title, results = ac.conjugate_verb(
+                self.root_entry.get().strip(), tense="present", bab_key=selected_bab_key, mood=mood, reverse_input=reverse_input
+            )
 
         self.last_title = title
-        self.last_results = gui_results
-        self.last_term_results = term_results
-        self._display_results(title, gui_results, term_results)
+        self.last_results = results
+        self._display_results(title, results)
 
-    def _conjugate_past(self, F, A, L, hF, hA):
-        base_a = f"{F}{hF}{A}{hA}{L}"
-        base_b = f"{F}{hF}{A}{self.FATHA}{L}{self.SUKUN}"
-        forms = [
-            f"{base_a}{self.FATHA}",
-            f"{base_a}{self.FATHA}{self.ALEF}",
-            f"{base_a}{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",
-            f"{base_a}{self.FATHA}{self.TAA}{self.SUKUN}",
-            f"{base_a}{self.FATHA}{self.TAA}{self.ALEF}{self.FATHA}",
-            f"{base_b}{self.NOON}{self.FATHA}",
-            f"{base_b}{self.TAA}{self.FATHA}",
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.SUKUN}",
-            f"{base_b}{self.TAA}{self.KASRA}",
-            f"{base_b}{self.TAA}{self.DAMMA}{self.MEEM}{self.FATHA}{self.ALEF}",
-            f"{base_b}{self.TAA}{self.DAMMA}{self.NOON}{self.SHADDA}{self.FATHA}",
-            f"{base_b}{self.TAA}{self.DAMMA}",
-            f"{base_b}{self.NOON}{self.ALEF}",
-        ]
-        return forms
-
-    def _conjugate_present(self, F, A, L, hA, mood):
-        prefixes = [
-            self.YAA,
-            self.YAA,
-            self.YAA,
-            self.TAA,
-            self.TAA,
-            self.YAA,
-            self.TAA,
-            self.TAA,
-            self.TAA,
-            self.TAA,
-            self.TAA,
-            self.TAA,
-            self.ALEF,
-            self.NOON,
-        ]
-        stem = f"{F}{self.SUKUN}{A}{hA}{L}"
-
-        indicative_suffixes = [
-            self.DAMMA,
-            f"{self.FATHA}{self.ALEF}{self.NOON}{self.KASRA}",
-            f"{self.DAMMA}{self.WAW}{self.SUKUN}{self.NOON}{self.FATHA}",
-            self.DAMMA,
-            f"{self.FATHA}{self.ALEF}{self.NOON}{self.KASRA}",
-            f"{self.SUKUN}{self.NOON}{self.FATHA}",
-            self.DAMMA,
-            f"{self.FATHA}{self.ALEF}{self.NOON}{self.KASRA}",
-            f"{self.DAMMA}{self.WAW}{self.SUKUN}{self.NOON}{self.FATHA}",
-            f"{self.KASRA}{self.YAA}{self.SUKUN}{self.NOON}{self.FATHA}",
-            f"{self.FATHA}{self.ALEF}{self.NOON}{self.KASRA}",
-            f"{self.SUKUN}{self.NOON}{self.FATHA}",
-            self.DAMMA,
-            self.DAMMA,
-        ]
-        mood_rules = {
-            "Indicative (مرفوع)": indicative_suffixes,
-            "Subjunctive (منصوب)": [
-                self.FATHA,
-                f"{self.FATHA}{self.ALEF}",
-                f"{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",
-                self.FATHA,
-                f"{self.FATHA}{self.ALEF}",
-                f"{self.SUKUN}{self.NOON}{self.FATHA}",
-                self.FATHA,
-                f"{self.FATHA}{self.ALEF}",
-                f"{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",
-                f"{self.KASRA}{self.YAA}{self.SUKUN}",
-                f"{self.FATHA}{self.ALEF}",
-                f"{self.SUKUN}{self.NOON}{self.FATHA}",
-                self.FATHA,
-                self.FATHA,
-            ],
-            "Jussive (مجزوم)": [
-                self.SUKUN,
-                f"{self.FATHA}{self.ALEF}",
-                f"{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",
-                self.SUKUN,
-                f"{self.FATHA}{self.ALEF}",
-                f"{self.SUKUN}{self.NOON}{self.FATHA}",
-                self.SUKUN,
-                f"{self.FATHA}{self.ALEF}",
-                f"{self.DAMMA}{self.WAW}{self.SUKUN}{self.ALEF}",
-                f"{self.KASRA}{self.YAA}",
-                f"{self.FATHA}{self.ALEF}",
-                f"{self.SUKUN}{self.NOON}{self.FATHA}",
-                self.SUKUN,
-                self.SUKUN,
-            ],
-        }
-
-        # Handle Imperative mood specially: only 2nd person forms are meaningful.
-        # For other persons (3rd and 1st), return placeholders "----".
-        if mood == "Imperative (أمر)":
-            jussive_suffixes = mood_rules["Jussive (مجزوم)"]
-            imperative_forms = []
-            for i in range(14):
-                # 2nd person indices are 6..11 (0-based)
-                if 6 <= i <= 11:
-                    # Build an imperative-like form by using the stem (no present prefix)
-                    # and appending the jussive suffix for that person.
-                    imperative_forms.append(f"{self.ALEF}{hA}{stem}{jussive_suffixes[i]}")
-                else:
-                    imperative_forms.append("----")
-            return imperative_forms
-
-        current_suffixes = mood_rules[mood]
-        forms = [f"{prefixes[i]}{self.FATHA}{stem}{current_suffixes[i]}" for i in range(14)]
-        return forms
-
-    def _display_results(self, title, gui_results, term_results):
+    def _display_results(self, title, results):
         """Formats and displays the 14 conjugations in the required table format."""
         is_headless = getattr(self, "headless", False)
 
         # Build terminal grouped results (used for both GUI and headless paths)
         term_grouped_results = {}
-        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, term_results):
+        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, results):
             if person_gender not in term_grouped_results:
                 term_grouped_results[person_gender] = {}
             if num in term_grouped_results[person_gender]:
@@ -688,7 +524,7 @@ class ArabicConjugatorApp:
 
         # --- GUI Table ---
         gui_grouped_results = {}
-        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, gui_results):
+        for (pronoun, _, person_gender, num), verb in zip(self.PRONOUNS, results):
             if person_gender not in gui_grouped_results:
                 gui_grouped_results[person_gender] = {}
             if num in gui_grouped_results[person_gender]:
@@ -897,14 +733,14 @@ Notes:
         app.root_entry = DummyEntry(verb_input)
 
         if tense == "past":
-            # Call parse_root and conjugate past
+            # Validate input using the parser for helpful feedback, then call the high-level API
             parsed = app.parse_root()
             if not parsed or not parsed[0]:
                 sys.exit(1)
-            L, A, F, hA, hF = parsed
-            gui_results = app._conjugate_past(F, A, L, hF, hA)
+            # Determine if input was in visual/display order (same logic as GUI)
+            reverse_input = should_reverse_gui_text() and not getattr(app, "_entry_logical_value", None)
+            title, gui_results = ac.conjugate_verb(verb_input, tense="past", reverse_input=reverse_input)
             term_results = gui_results
-            title = f"الماضي ({F}{hF}{A}{hA}{L}{app.FATHA})"
         else:
             # Present
             bab_key = bab_map.get(args.bab, list(ArabicConjugatorApp.BABS.keys())[0])
@@ -912,11 +748,9 @@ Notes:
             parsed = app.parse_root()
             if not parsed or not parsed[0]:
                 sys.exit(1)
-            L, A, F, hA, hF = parsed
-            _, present_ayn_haraka = ArabicConjugatorApp.BABS[bab_key]
-            gui_results = app._conjugate_present(F, A, L, present_ayn_haraka, mood)
+            reverse_input = should_reverse_gui_text() and not getattr(app, "_entry_logical_value", None)
+            title, gui_results = ac.conjugate_verb(verb_input, tense="present", bab_key=bab_key, mood=mood, reverse_input=reverse_input)
             term_results = gui_results
-            title = f"المضارع - {mood} ({bab_key})"
 
         # Reuse existing terminal print logic in _display_results by calling it.
         # But _display_results uses self.output_text which doesn't exist in headless mode.
