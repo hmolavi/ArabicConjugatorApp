@@ -80,10 +80,6 @@ def parse_root(raw: str, reverse: bool = False) -> Tuple[str, str, str, str, str
     if hA is None:
         raise ValueError("Could not detect the Haraka on the second root letter (A)")
 
-
-    # Debug: print parsed root letters and their harakat
-    print(f"F={F}, A={A}, L={L}, hF={hF}, hA={hA}")
-
     return F, A, L, hF, hA
 
 
@@ -187,7 +183,7 @@ def conjugate_present(F: str, A: str, L: str, present_ayn_haraka: str, mood: str
             if 6 <= i <= 11:
                 imperative_forms.append(f"{ALEF}{present_ayn_haraka}{stem}{jussive_suffixes[i]}")
             else:
-                imperative_forms.append("----")
+                imperative_forms.append(None)
         return imperative_forms
 
     current_suffixes = mood_rules.get(mood, mood_rules["Indicative (مرفوع)"])
