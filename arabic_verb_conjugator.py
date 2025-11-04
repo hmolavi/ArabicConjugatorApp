@@ -739,8 +739,7 @@ Notes:
                 sys.exit(1)
             # Determine if input was in visual/display order (same logic as GUI)
             reverse_input = should_reverse_gui_text() and not getattr(app, "_entry_logical_value", None)
-            title, gui_results = ac.conjugate_verb(verb_input, tense="past", reverse_input=reverse_input)
-            term_results = gui_results
+            title, results = ac.conjugate_verb(verb_input, tense="past", reverse_input=reverse_input)
         else:
             # Present
             bab_key = bab_map.get(args.bab, list(ArabicConjugatorApp.BABS.keys())[0])
@@ -749,8 +748,7 @@ Notes:
             if not parsed or not parsed[0]:
                 sys.exit(1)
             reverse_input = should_reverse_gui_text() and not getattr(app, "_entry_logical_value", None)
-            title, gui_results = ac.conjugate_verb(verb_input, tense="present", bab_key=bab_key, mood=mood, reverse_input=reverse_input)
-            term_results = gui_results
+            title, results = ac.conjugate_verb(verb_input, tense="present", bab_key=bab_key, mood=mood, reverse_input=reverse_input)
 
         # Reuse existing terminal print logic in _display_results by calling it.
         # But _display_results uses self.output_text which doesn't exist in headless mode.
@@ -772,7 +770,7 @@ Notes:
                 return
 
         app.output_text = DummyText()
-        app._display_results(title, gui_results, term_results)
+        app._display_results(title, results)
 
         sys.exit(0)
 
