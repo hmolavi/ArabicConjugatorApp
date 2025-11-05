@@ -4,7 +4,7 @@ import os
 import platform
 from arabic_reshaper import ArabicReshaper
 from bidi.algorithm import get_display
-import arabic_conjugation as ac
+import arabic_conjugator_hmolavi as ac
 
 # Module-level override: when None, use heuristics; when True/False, force terminal reversal behavior
 FORCE_REVERSE_TERMINAL = None

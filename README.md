@@ -36,10 +36,10 @@ It is highly recommended to create a virtual environment to manage the project's
     ```
     > for folks on Windows' CMD it's `venv\Scripts\activate`
 
-2. Install the required libraries (only necessary for proper Arabic shaping in some terminals):
+2. Install the required libraries:
 
     ```bash
-    pip3 install arabic_reshaper python-bidi
+    pip3 install -r requirements.txt
     ```
 
 3. Run the application:
